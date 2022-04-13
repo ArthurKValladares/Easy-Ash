@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ash = "0.37"
+anyhow = "1"
+ash = {version = "0.37", features = ["linked"]}
 raw-window-handle = "0.4"
 easy-versions = { git = "https://github.com/ArthurKValladares/Easy-Versions" }
