@@ -3,4 +3,7 @@ mod device;
 mod entry;
 mod resources;
 
-pub use {application::ApplicationInfo, entry::Entry};
+pub use {
+    application::ApplicationInfo,
+    entry::{Entry, InstanceInfo},
+};
