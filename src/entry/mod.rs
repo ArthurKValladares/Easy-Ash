@@ -1,6 +1,9 @@
+mod debug;
+
 use crate::ApplicationInfo;
 use anyhow::Result;
-use ash::{extensions::ext::DebugUtils, vk};
+use ash::vk;
+use debug::DebugUtils;
 use raw_window_handle::HasRawWindowHandle;
 use std::ffi::{CStr, CString};
 
@@ -31,15 +34,16 @@ impl InstanceInfo {
     fn extensions(&self) -> Vec<&'static CStr> {
         let mut extensions = Vec::new();
         if self.debug_layers {
-            extensions.push(DebugUtils::name())
+            extensions.push(ash::extensions::ext::DebugUtils::name())
         }
         extensions
     }
 }
 
 pub struct Entry {
-    entry: ash::Entry,
-    instance: ash::Instance,
+    pub(crate) entry: ash::Entry,
+    pub(crate) instance: ash::Instance,
+    debug_utils: Option<DebugUtils>,
 }
 
 impl Entry {
@@ -71,6 +75,17 @@ impl Entry {
             .enabled_extension_names(&extensions_raw);
 
         let instance = unsafe { entry.create_instance(&create_info, None)? };
-        Ok(Self { entry, instance })
+
+        let debug_utils = if instance_info.debug_layers {
+            Some(DebugUtils::new(&entry, &instance)?)
+        } else {
+            None
+        };
+
+        Ok(Self {
+            entry,
+            instance,
+            debug_utils,
+        })
     }
 }
