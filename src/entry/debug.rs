@@ -1,4 +1,3 @@
-use super::Entry;
 use anyhow::Result;
 use std::{borrow::Cow, ffi::CStr};
 
