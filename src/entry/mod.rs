@@ -66,7 +66,7 @@ impl Entry {
         let extensions_raw = extensions
             .iter()
             .map(|extension| extension.as_ptr())
-            .chain(ash_window::enumerate_required_extensions(&window_handle)?.to_vec())
+            .chain(ash_window::enumerate_required_extensions(window_handle)?.to_vec())
             .collect::<Vec<*const std::os::raw::c_char>>();
 
         let create_info = vk::InstanceCreateInfo::builder()
