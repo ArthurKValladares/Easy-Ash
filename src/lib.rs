@@ -6,6 +6,7 @@ mod surface;
 
 pub use {
     application::ApplicationInfo,
+    device::Device,
     entry::{Entry, InstanceInfo},
     surface::SurfaceBuilder,
 };

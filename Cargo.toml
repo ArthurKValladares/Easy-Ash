@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
+thiserror = "1.0"
 ash = {version = "0.37", features = ["linked"]}
 ash-window = "0.10.0"
 raw-window-handle = "0.3.4"
