@@ -11,7 +11,8 @@ pub enum DeviceCreationError {
 
 pub struct Device {
     p_device: vk::PhysicalDevice,
-    queue_family_index: usize,
+    device: ash::Device,
+    queue_family_index: u32,
 }
 
 impl Device {
@@ -37,15 +38,38 @@ impl Device {
                                     )
                                     .unwrap();
                         if supports_graphic_and_surface {
-                            Some((*pdevice, index))
+                            Some((*pdevice, index as u32))
                         } else {
                             None
                         }
                     })
             })
             .ok_or(DeviceCreationError::NoSuitableDevice)?;
+
+        let priorities = [1.0];
+        let queue_info = vk::DeviceQueueCreateInfo::builder()
+            .queue_family_index(queue_family_index)
+            .queue_priorities(&priorities);
+
+        let device_extension_names_raw = [ash::extensions::khr::Swapchain::name().as_ptr()];
+        let features = vk::PhysicalDeviceFeatures {
+            shader_clip_distance: 1,
+            ..Default::default()
+        };
+        let device_create_info = vk::DeviceCreateInfo::builder()
+            .queue_create_infos(std::slice::from_ref(&queue_info))
+            .enabled_extension_names(&device_extension_names_raw)
+            .enabled_features(&features);
+
+        let device = unsafe {
+            entry
+                .instance
+                .create_device(p_device, &device_create_info, None)?
+        };
+
         Ok(Self {
             p_device,
+            device,
             queue_family_index,
         })
     }
