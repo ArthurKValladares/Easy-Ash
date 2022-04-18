@@ -10,10 +10,10 @@ pub enum DeviceCreationError {
 }
 
 pub struct Device {
-    p_device: vk::PhysicalDevice,
-    device: ash::Device,
-    queue_family_index: u32,
-    present_queue: vk::Queue,
+    pub p_device: vk::PhysicalDevice,
+    pub device: ash::Device,
+    pub queue_family_index: u32,
+    pub present_queue: vk::Queue,
 }
 
 impl Device {
