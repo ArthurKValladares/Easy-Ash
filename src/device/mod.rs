@@ -13,6 +13,7 @@ pub struct Device {
     p_device: vk::PhysicalDevice,
     device: ash::Device,
     queue_family_index: u32,
+    present_queue: vk::Queue,
 }
 
 impl Device {
@@ -67,10 +68,13 @@ impl Device {
                 .create_device(p_device, &device_create_info, None)?
         };
 
+        let present_queue = unsafe { device.get_device_queue(queue_family_index, 0) };
+
         Ok(Self {
             p_device,
             device,
             queue_family_index,
+            present_queue,
         })
     }
 }
