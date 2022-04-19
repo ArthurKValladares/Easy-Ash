@@ -1,4 +1,5 @@
 mod application;
+mod context;
 mod device;
 mod entry;
 mod resources;
@@ -7,6 +8,7 @@ mod swapchain;
 
 pub use {
     application::ApplicationInfo,
+    context::Context,
     device::Device,
     entry::{Entry, InstanceInfo},
     surface::SurfaceBuilder,

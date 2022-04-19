@@ -16,8 +16,6 @@ pub struct Device {
     pub queue_family_index: u32,
     pub present_queue: vk::Queue,
     pub command_pool: vk::CommandPool,
-    pub draw_command_buffer: vk::CommandBuffer,
-    pub setup_command_buffer: vk::CommandBuffer,
 }
 
 impl Device {
@@ -85,16 +83,6 @@ impl Device {
 
         let command_pool = unsafe { device.create_command_pool(&pool_create_info, None)? };
 
-        let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-            .command_buffer_count(2)
-            .command_pool(command_pool)
-            .level(vk::CommandBufferLevel::PRIMARY);
-
-        let command_buffers =
-            unsafe { device.allocate_command_buffers(&command_buffer_allocate_info)? };
-        let setup_command_buffer = command_buffers[0];
-        let draw_command_buffer = command_buffers[1];
-
         Ok(Self {
             p_device,
             memory_properties,
@@ -102,8 +90,6 @@ impl Device {
             queue_family_index,
             present_queue,
             command_pool,
-            draw_command_buffer,
-            setup_command_buffer,
         })
     }
 }

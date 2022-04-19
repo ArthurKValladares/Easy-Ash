@@ -3,6 +3,8 @@ use anyhow::Result;
 use ash::vk;
 use raw_window_handle::HasRawWindowHandle;
 
+// TODO: We should not expose surface to the app, it should be a part of the Swpchain.
+
 pub struct SurfaceBuilder {
     pub loader: ash::extensions::khr::Surface,
     pub raw: vk::SurfaceKHR,
