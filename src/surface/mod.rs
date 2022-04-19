@@ -36,27 +36,25 @@ impl SurfaceBuilder {
                 .get_physical_device_surface_formats(device.p_device, self.raw)?[0]
         };
 
-        let surface_capabilities = unsafe {
+        let capabilities = unsafe {
             self.loader
                 .get_physical_device_surface_capabilities(device.p_device, self.raw)?
         };
 
         let desired_image_count = {
-            let mut desired_count = surface_capabilities.min_image_count + 1;
-            if surface_capabilities.max_image_count > 0
-                && desired_count > surface_capabilities.max_image_count
-            {
-                desired_count = surface_capabilities.max_image_count;
+            let mut desired_count = capabilities.min_image_count + 1;
+            if capabilities.max_image_count > 0 && desired_count > capabilities.max_image_count {
+                desired_count = capabilities.max_image_count;
             }
             desired_count
         };
 
-        let resolution = match surface_capabilities.current_extent.width {
+        let resolution = match capabilities.current_extent.width {
             std::u32::MAX => vk::Extent2D {
                 width: self.window_width,
                 height: self.window_height,
             },
-            _ => surface_capabilities.current_extent,
+            _ => capabilities.current_extent,
         };
 
         Ok(Surface {
@@ -64,6 +62,8 @@ impl SurfaceBuilder {
             raw: self.raw,
             format,
             resolution,
+            capabilities,
+            desired_image_count,
         })
     }
 }
@@ -73,6 +73,8 @@ pub struct Surface {
     pub raw: vk::SurfaceKHR,
     pub format: vk::SurfaceFormatKHR,
     pub resolution: vk::Extent2D,
+    pub capabilities: vk::SurfaceCapabilitiesKHR,
+    pub desired_image_count: u32,
 }
 
 impl Surface {

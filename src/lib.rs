@@ -3,10 +3,12 @@ mod device;
 mod entry;
 mod resources;
 mod surface;
+mod swapchain;
 
 pub use {
     application::ApplicationInfo,
     device::Device,
     entry::{Entry, InstanceInfo},
     surface::SurfaceBuilder,
+    swapchain::Swapchain,
 };
