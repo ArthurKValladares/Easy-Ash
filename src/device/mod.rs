@@ -1,4 +1,4 @@
-use crate::{entry::Entry, surface::SurfaceBuilder};
+use crate::{entry::Entry, surface::Surface};
 use anyhow::Result;
 use ash::vk;
 use thiserror::Error;
@@ -19,7 +19,7 @@ pub struct Device {
 }
 
 impl Device {
-    pub fn new(entry: &Entry, surface: &SurfaceBuilder) -> Result<Self> {
+    pub fn new(entry: &Entry, surface: &Surface) -> Result<Self> {
         let pdevices = unsafe { entry.instance.enumerate_physical_devices()? };
         let (p_device, queue_family_index) = pdevices
             .iter()

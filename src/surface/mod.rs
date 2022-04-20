@@ -5,14 +5,14 @@ use raw_window_handle::HasRawWindowHandle;
 
 // TODO: We should not expose surface to the app, it should be a part of the Swpchain.
 
-pub struct SurfaceBuilder {
+pub struct Surface {
     pub loader: ash::extensions::khr::Surface,
     pub raw: vk::SurfaceKHR,
     window_width: u32,
     window_height: u32,
 }
 
-impl SurfaceBuilder {
+impl Surface {
     pub fn new(
         entry: &Entry,
         window_handle: &dyn HasRawWindowHandle,
@@ -31,16 +31,27 @@ impl SurfaceBuilder {
             window_height,
         })
     }
+}
 
-    pub fn build(self, device: &Device) -> Result<Surface> {
+pub struct SurfaceData {
+    pub format: vk::SurfaceFormatKHR,
+    pub resolution: vk::Extent2D,
+    pub capabilities: vk::SurfaceCapabilitiesKHR,
+    pub desired_image_count: u32,
+}
+
+impl SurfaceData {
+    pub(crate) fn new(surface: &Surface, device: &Device) -> Result<Self> {
         let format = unsafe {
-            self.loader
-                .get_physical_device_surface_formats(device.p_device, self.raw)?[0]
+            surface
+                .loader
+                .get_physical_device_surface_formats(device.p_device, surface.raw)?[0]
         };
 
         let capabilities = unsafe {
-            self.loader
-                .get_physical_device_surface_capabilities(device.p_device, self.raw)?
+            surface
+                .loader
+                .get_physical_device_surface_capabilities(device.p_device, surface.raw)?
         };
 
         let desired_image_count = {
@@ -53,39 +64,17 @@ impl SurfaceBuilder {
 
         let resolution = match capabilities.current_extent.width {
             std::u32::MAX => vk::Extent2D {
-                width: self.window_width,
-                height: self.window_height,
+                width: surface.window_width,
+                height: surface.window_height,
             },
             _ => capabilities.current_extent,
         };
 
-        Ok(Surface {
-            loader: self.loader,
-            raw: self.raw,
+        Ok(SurfaceData {
             format,
             resolution,
             capabilities,
             desired_image_count,
         })
-    }
-}
-
-pub struct Surface {
-    pub loader: ash::extensions::khr::Surface,
-    pub raw: vk::SurfaceKHR,
-    pub format: vk::SurfaceFormatKHR,
-    pub resolution: vk::Extent2D,
-    pub capabilities: vk::SurfaceCapabilitiesKHR,
-    pub desired_image_count: u32,
-}
-
-impl Surface {
-    pub fn builder(
-        entry: &Entry,
-        window_handle: &dyn HasRawWindowHandle,
-        window_width: u32,
-        window_height: u32,
-    ) -> Result<SurfaceBuilder> {
-        SurfaceBuilder::new(entry, window_handle, window_width, window_height)
     }
 }

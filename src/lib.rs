@@ -11,6 +11,6 @@ pub use {
     context::Context,
     device::Device,
     entry::{Entry, InstanceInfo},
-    surface::SurfaceBuilder,
+    surface::Surface,
     swapchain::Swapchain,
 };
