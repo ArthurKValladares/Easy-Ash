@@ -5,6 +5,7 @@ mod entry;
 mod resources;
 mod surface;
 mod swapchain;
+mod sync;
 
 pub use {
     application::ApplicationInfo,
