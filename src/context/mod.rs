@@ -25,4 +25,39 @@ impl Context {
             command_buffer: command_buffers[0],
         })
     }
+
+    pub fn begin(&self, device: &Device) -> Result<()> {
+        unsafe {
+            device.device.reset_command_buffer(
+                self.command_buffer,
+                vk::CommandBufferResetFlags::RELEASE_RESOURCES,
+            )?
+        };
+
+        let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
+            .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
+
+        unsafe {
+            device
+                .device
+                .begin_command_buffer(self.command_buffer, &command_buffer_begin_info)?
+        };
+
+        Ok(())
+    }
+
+    pub fn end(&self, device: &Device) -> Result<()> {
+        unsafe { device.device.end_command_buffer(self.command_buffer)? };
+        Ok(())
+    }
+
+    pub fn record<F>(&self, device: &Device, f: F) -> Result<()>
+    where
+        F: FnOnce(&Device, &Context),
+    {
+        self.begin(device)?;
+        f(device, &self);
+        self.end(&device)?;
+        Ok(())
+    }
 }
