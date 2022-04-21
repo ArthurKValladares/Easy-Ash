@@ -1,4 +1,7 @@
-use crate::{device::Device, util};
+use crate::{
+    device::Device,
+    mem::{self, MemoryMappablePointer},
+};
 use anyhow::Result;
 use ash::vk;
 use thiserror::Error;
@@ -26,6 +29,7 @@ impl BufferType {
 pub struct Buffer {
     buffer: vk::Buffer,
     memory: vk::DeviceMemory,
+    ptr: Option<MemoryMappablePointer>,
 }
 
 impl Buffer {
@@ -36,22 +40,37 @@ impl Buffer {
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
 
         let buffer = unsafe { device.device.create_buffer(&buffer_info, None)? };
-        let index_buffer_memory_req =
-            unsafe { device.device.get_buffer_memory_requirements(buffer) };
-        let buffer_memory_index = util::find_memory_type_index(
-            &index_buffer_memory_req,
-            &device.memory_properties,
-            vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT, // TODO: Configurable somehow, abstracted away
-        )
-        .ok_or(BufferCreationError::CouldNotFindMemoryIndex)?;
+        let buffer_memory_req = unsafe { device.device.get_buffer_memory_requirements(buffer) };
+        // TODO: Configurable somehow, abstracted away
+        let flags = vk::MemoryPropertyFlags::HOST_VISIBLE | vk::MemoryPropertyFlags::HOST_COHERENT;
+        let buffer_memory_index =
+            mem::find_memory_type_index(&buffer_memory_req, &device.memory_properties, flags)
+                .ok_or(BufferCreationError::CouldNotFindMemoryIndex)?;
 
         let allocate_info = vk::MemoryAllocateInfo {
-            allocation_size: index_buffer_memory_req.size,
+            allocation_size: buffer_memory_req.size,
             memory_type_index: buffer_memory_index,
             ..Default::default()
         };
         let memory = unsafe { device.device.allocate_memory(&allocate_info, None)? };
+        let ptr = if flags.contains(vk::MemoryPropertyFlags::HOST_VISIBLE) {
+            unsafe {
+                let ptr = device.device.map_memory(
+                    memory,
+                    0,
+                    buffer_memory_req.size,
+                    vk::MemoryMapFlags::empty(),
+                )?;
+                Some(MemoryMappablePointer::from_raw_ptr(ptr))
+            }
+        } else {
+            None
+        };
 
-        Ok(Self { buffer, memory })
+        Ok(Self {
+            buffer,
+            memory,
+            ptr,
+        })
     }
 }

@@ -1,4 +1,4 @@
-use crate::{device::Device, util};
+use crate::{device::Device, mem};
 use anyhow::Result;
 use ash::vk;
 use thiserror::Error;
@@ -77,7 +77,7 @@ impl Image {
 
         let image = unsafe { device.device.create_image(&image_create_info, None)? };
         let image_memory_req = unsafe { device.device.get_image_memory_requirements(image) };
-        let image_memory_index = util::find_memory_type_index(
+        let image_memory_index = mem::find_memory_type_index(
             &image_memory_req,
             &device.memory_properties,
             vk::MemoryPropertyFlags::DEVICE_LOCAL,

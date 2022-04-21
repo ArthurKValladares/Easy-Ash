@@ -2,11 +2,11 @@ mod application;
 mod context;
 mod device;
 mod entry;
+mod mem;
 mod resources;
 mod surface;
 mod swapchain;
 mod sync;
-mod util;
 
 pub use {
     application::ApplicationInfo,
