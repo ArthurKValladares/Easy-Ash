@@ -8,28 +8,16 @@ use raw_window_handle::HasRawWindowHandle;
 pub struct Surface {
     pub loader: ash::extensions::khr::Surface,
     pub raw: vk::SurfaceKHR,
-    window_width: u32,
-    window_height: u32,
 }
 
 impl Surface {
-    pub fn new(
-        entry: &Entry,
-        window_handle: &dyn HasRawWindowHandle,
-        window_width: u32,
-        window_height: u32,
-    ) -> Result<Self> {
+    pub fn new(entry: &Entry, window_handle: &dyn HasRawWindowHandle) -> Result<Self> {
         let loader = ash::extensions::khr::Surface::new(&entry.entry, &entry.instance);
         let raw = unsafe {
             ash_window::create_surface(&entry.entry, &entry.instance, window_handle, None)?
         };
 
-        Ok(Self {
-            loader,
-            raw,
-            window_width,
-            window_height,
-        })
+        Ok(Self { loader, raw })
     }
 }
 
@@ -41,7 +29,7 @@ pub struct SurfaceData {
 }
 
 impl SurfaceData {
-    pub(crate) fn new(surface: &Surface, device: &Device) -> Result<Self> {
+    pub(crate) fn new(surface: &Surface, device: &Device, width: u32, height: u32) -> Result<Self> {
         let format = unsafe {
             surface
                 .loader
@@ -63,10 +51,7 @@ impl SurfaceData {
         };
 
         let resolution = match capabilities.current_extent.width {
-            std::u32::MAX => vk::Extent2D {
-                width: surface.window_width,
-                height: surface.window_height,
-            },
+            std::u32::MAX => vk::Extent2D { width, height },
             _ => capabilities.current_extent,
         };
 

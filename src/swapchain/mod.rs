@@ -16,8 +16,14 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-    pub fn new(entry: &Entry, device: &Device, surface: Surface) -> Result<Self> {
-        let surface_data = SurfaceData::new(&surface, device)?;
+    pub fn new(
+        entry: &Entry,
+        device: &Device,
+        surface: Surface,
+        width: u32,
+        height: u32,
+    ) -> Result<Self> {
+        let surface_data = SurfaceData::new(&surface, device, width, height)?;
 
         let pre_transform = if surface_data
             .capabilities
@@ -91,5 +97,17 @@ impl Swapchain {
             present_images,
             present_image_views,
         })
+    }
+
+    pub fn resolution(&self) -> vk::Extent2D {
+        self.surface_data.resolution
+    }
+
+    pub fn width(&self) -> u32 {
+        self.surface_data.resolution.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.surface_data.resolution.height
     }
 }
