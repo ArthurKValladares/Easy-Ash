@@ -1,6 +1,13 @@
 use crate::{device::Device, util};
 use anyhow::Result;
 use ash::vk;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum ImageCreationError {
+    #[error("could not find memory index for image")]
+    CouldNotFindMemoryIndex,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct ImageResolution {
@@ -39,17 +46,25 @@ impl ImageType {
             ImageType::Depth => vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT,
         }
     }
+
+    fn aspect_mask(&self) -> vk::ImageAspectFlags {
+        match self {
+            ImageType::Color => todo!(),
+            ImageType::Depth => vk::ImageAspectFlags::DEPTH,
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct Image {
     image: vk::Image,
     memory: vk::DeviceMemory,
+    view: vk::ImageView,
 }
 
 impl Image {
     pub fn new(device: &Device, resolution: ImageResolution, ty: ImageType) -> Result<Self> {
-        let depth_image_create_info = vk::ImageCreateInfo::builder()
+        let image_create_info = vk::ImageCreateInfo::builder()
             .image_type(vk::ImageType::TYPE_2D)
             .format(ty.format())
             .extent(resolution.into())
@@ -60,14 +75,14 @@ impl Image {
             .usage(ty.usage())
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
 
-        let image = unsafe { device.device.create_image(&depth_image_create_info, None)? };
+        let image = unsafe { device.device.create_image(&image_create_info, None)? };
         let image_memory_req = unsafe { device.device.get_image_memory_requirements(image) };
         let image_memory_index = util::find_memory_type_index(
             &image_memory_req,
             &device.memory_properties,
             vk::MemoryPropertyFlags::DEVICE_LOCAL,
         )
-        .expect("Unable to find suitable memory index for depth image.");
+        .ok_or(ImageCreationError::CouldNotFindMemoryIndex)?;
 
         let image_allocate_info = vk::MemoryAllocateInfo::builder()
             .allocation_size(image_memory_req.size)
@@ -75,6 +90,24 @@ impl Image {
 
         let memory = unsafe { device.device.allocate_memory(&image_allocate_info, None)? };
 
-        Ok(Self { image, memory })
+        let image_view_info = vk::ImageViewCreateInfo::builder()
+            .subresource_range(
+                vk::ImageSubresourceRange::builder()
+                    .aspect_mask(ty.aspect_mask())
+                    .level_count(1)
+                    .layer_count(1)
+                    .build(),
+            )
+            .image(image)
+            .format(image_create_info.format)
+            .view_type(vk::ImageViewType::TYPE_2D);
+
+        let view = unsafe { device.device.create_image_view(&image_view_info, None)? };
+
+        Ok(Self {
+            image,
+            memory,
+            view,
+        })
     }
 }

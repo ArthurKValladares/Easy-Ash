@@ -13,7 +13,7 @@ pub use {
     context::Context,
     device::Device,
     entry::{Entry, InstanceInfo},
-    resources::Image,
+    resources::{Image, ImageResolution, ImageType},
     surface::Surface,
     swapchain::Swapchain,
 };
