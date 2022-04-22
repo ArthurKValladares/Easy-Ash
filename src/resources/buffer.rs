@@ -27,7 +27,7 @@ impl BufferType {
     fn usage(&self) -> vk::BufferUsageFlags {
         match self {
             BufferType::Index => vk::BufferUsageFlags::INDEX_BUFFER,
-            BufferType::Storage => todo!(),
+            BufferType::Storage => vk::BufferUsageFlags::STORAGE_BUFFER,
         }
     }
 }
@@ -88,7 +88,7 @@ impl Buffer {
     }
 
     pub fn copy_data<T: Copy>(&self, data: &[T]) -> Result<(), MemoryCopyError> {
-        if let Some(ptr) = self.ptr {
+        if let Some(ptr) = &self.ptr {
             ptr.mem_copy(data);
             Ok(())
         } else {

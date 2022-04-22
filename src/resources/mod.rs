@@ -1,4 +1,7 @@
 mod buffer;
 mod image;
 
-pub use image::{Image, ImageResolution, ImageType};
+pub use {
+    buffer::{Buffer, BufferType},
+    image::{Image, ImageResolution, ImageType},
+};
