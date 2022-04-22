@@ -15,6 +15,11 @@ pub fn find_memory_type_index(
         .map(|(index, _memory_type)| index as _)
 }
 
+pub fn size_of_slice<T>(data: &[T]) -> u64 {
+    let elem_size = std::mem::size_of::<T>();
+    (data.len() * elem_size) as u64
+}
+
 pub unsafe fn mem_copy<T: Copy>(ptr: *mut std::ffi::c_void, data: &[T]) {
     let elem_size = std::mem::size_of::<T>() as vk::DeviceSize;
     let size = data.len() as vk::DeviceSize * elem_size;

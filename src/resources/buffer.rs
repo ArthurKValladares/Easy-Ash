@@ -12,6 +12,12 @@ pub enum BufferCreationError {
     CouldNotFindMemoryIndex,
 }
 
+#[derive(Debug, Error)]
+pub enum MemoryCopyError {
+    #[error("buffer does not allow CPU -> GPU transfer")]
+    CannotTransferFromCPU,
+}
+
 pub enum BufferType {
     Index,
     Storage,
@@ -72,5 +78,21 @@ impl Buffer {
             memory,
             ptr,
         })
+    }
+
+    pub fn from_data<T: Copy>(device: &Device, ty: BufferType, data: &[T]) -> Result<Self> {
+        let size = mem::size_of_slice(data);
+        let buffer = Self::with_size(device, size, ty)?;
+        buffer.copy_data(data)?;
+        Ok(buffer)
+    }
+
+    pub fn copy_data<T: Copy>(&self, data: &[T]) -> Result<(), MemoryCopyError> {
+        if let Some(ptr) = self.ptr {
+            ptr.mem_copy(data);
+            Ok(())
+        } else {
+            Err(MemoryCopyError::CannotTransferFromCPU)
+        }
     }
 }
