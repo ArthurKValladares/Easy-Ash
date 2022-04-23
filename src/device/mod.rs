@@ -1,4 +1,4 @@
-use crate::{entry::Entry, surface::Surface, context::Context};
+use crate::{entry::Entry, surface::Surface};
 use anyhow::Result;
 use ash::vk;
 use thiserror::Error;
