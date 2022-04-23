@@ -1,6 +1,6 @@
 mod api_version;
 
-use self::api_version::ApiVersion;
+pub use self::api_version::ApiVersion;
 use ash::vk;
 use easy_versions::VersionSingle;
 

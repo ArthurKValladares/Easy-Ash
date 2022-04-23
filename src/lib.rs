@@ -10,7 +10,7 @@ mod swapchain;
 mod sync;
 
 pub use {
-    application::ApplicationInfo,
+    application::{ApiVersion, ApplicationInfo},
     context::Context,
     device::Device,
     entry::{Entry, InstanceInfo},
