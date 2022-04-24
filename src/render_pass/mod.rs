@@ -4,6 +4,7 @@ use ash::vk;
 
 pub struct RenderPass {
     render_pass: vk::RenderPass,
+    framebuffers: Vec<vk::Framebuffer>,
 }
 
 impl RenderPass {
@@ -36,6 +37,29 @@ impl RenderPass {
                 .create_render_pass(&renderpass_create_info, None)?
         };
 
-        Ok(Self { render_pass })
+        let framebuffers = swapchain
+            .present_image_views
+            .iter()
+            .map(|&present_image_view| {
+                let framebuffer_attachments = [present_image_view];
+                let frame_buffer_create_info = vk::FramebufferCreateInfo::builder()
+                    .render_pass(render_pass)
+                    .attachments(&framebuffer_attachments)
+                    .width(swapchain.surface_data.resolution.width)
+                    .height(swapchain.surface_data.resolution.height)
+                    .layers(1);
+
+                unsafe {
+                    device
+                        .device
+                        .create_framebuffer(&frame_buffer_create_info, None)
+                }
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(Self {
+            render_pass,
+            framebuffers,
+        })
     }
 }
