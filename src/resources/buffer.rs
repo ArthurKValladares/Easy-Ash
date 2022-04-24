@@ -33,7 +33,8 @@ impl BufferType {
 }
 
 pub struct Buffer {
-    buffer: vk::Buffer,
+    pub buffer: vk::Buffer,
+    pub size: u64,
     memory: vk::DeviceMemory,
     ptr: Option<MemoryMappablePointer>,
 }
@@ -75,6 +76,7 @@ impl Buffer {
 
         Ok(Self {
             buffer,
+            size,
             memory,
             ptr,
         })

@@ -1,4 +1,4 @@
-use crate::device::Device;
+use crate::{device::Device, resources::buffer::Buffer};
 use anyhow::Result;
 use ash::vk;
 
@@ -37,16 +37,32 @@ impl DescriptorPool {
 }
 
 #[derive(Debug, Copy, Clone)]
+pub struct DescriptorBufferInfo {
+    info: vk::DescriptorBufferInfo,
+}
+
+impl DescriptorBufferInfo {
+    pub fn new(buffer: &Buffer, offset: Option<u64>, range: Option<u64>) -> Self {
+        let info = vk::DescriptorBufferInfo {
+            buffer: buffer.buffer,
+            offset: offset.unwrap_or(0),
+            range: range.unwrap_or(buffer.size),
+        };
+        Self { info }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub enum DescriptorType {
-    StorageBuffer,
-    UniformBuffer,
+    StorageBuffer(DescriptorBufferInfo),
+    UniformBuffer(DescriptorBufferInfo),
 }
 
 impl From<DescriptorType> for vk::DescriptorType {
     fn from(ty: DescriptorType) -> Self {
         match ty {
-            DescriptorType::StorageBuffer => vk::DescriptorType::STORAGE_BUFFER,
-            DescriptorType::UniformBuffer => vk::DescriptorType::UNIFORM_BUFFER,
+            DescriptorType::StorageBuffer(_) => vk::DescriptorType::STORAGE_BUFFER,
+            DescriptorType::UniformBuffer(_) => vk::DescriptorType::UNIFORM_BUFFER,
         }
     }
 }
@@ -82,6 +98,7 @@ impl BindingDesc {
 pub struct DescriptorSet {
     layout: vk::DescriptorSetLayout,
     descriptor_set: vk::DescriptorSet,
+    write_descriptor_sets: Vec<vk::WriteDescriptorSet>,
 }
 
 impl DescriptorSet {
@@ -120,9 +137,31 @@ impl DescriptorSet {
                 .allocate_descriptor_sets(&descriptor_alloc_info)?[0]
         };
 
+        let write_descriptor_sets = binding_descs
+            .iter()
+            .enumerate()
+            .map(|(idx, desc)| {
+                // TODO: Need to hook up buffer pointer
+                let write = vk::WriteDescriptorSet::builder()
+                    .dst_set(descriptor_set)
+                    .dst_binding(idx as u32)
+                    .descriptor_type(desc.ty.into());
+                match &desc.ty {
+                    DescriptorType::StorageBuffer(info) => {
+                        write.buffer_info(std::slice::from_ref(&info.info))
+                    }
+                    DescriptorType::UniformBuffer(info) => {
+                        write.buffer_info(std::slice::from_ref(&info.info))
+                    }
+                }
+                .build()
+            })
+            .collect::<Vec<_>>();
+
         Ok(Self {
             layout,
             descriptor_set,
+            write_descriptor_sets,
         })
     }
 }

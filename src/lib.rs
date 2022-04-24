@@ -15,7 +15,10 @@ mod sync;
 pub use {
     application::{ApiVersion, ApplicationInfo},
     context::Context,
-    descriptors::{BindingDesc, DescriptorPool, DescriptorSet, DescriptorType, ShaderStage},
+    descriptors::{
+        BindingDesc, DescriptorBufferInfo, DescriptorPool, DescriptorSet, DescriptorType,
+        ShaderStage,
+    },
     device::Device,
     entry::{Entry, InstanceInfo},
     pipeline::graphics_pipeline::GraphicsPipeline,
