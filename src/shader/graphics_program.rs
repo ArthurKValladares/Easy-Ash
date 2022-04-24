@@ -1,8 +1,8 @@
 use crate::Shader;
 
 pub struct GraphicsProgram {
-    vertex_shader: Shader,
-    fragment_shader: Shader,
+    pub vertex_shader: Shader,
+    pub fragment_shader: Shader,
 }
 
 impl GraphicsProgram {

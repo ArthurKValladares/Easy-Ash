@@ -3,8 +3,8 @@ use anyhow::Result;
 use ash::vk;
 
 pub struct RenderPass {
-    render_pass: vk::RenderPass,
-    framebuffers: Vec<vk::Framebuffer>,
+    pub render_pass: vk::RenderPass,
+    pub framebuffers: Vec<vk::Framebuffer>,
 }
 
 impl RenderPass {

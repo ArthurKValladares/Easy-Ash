@@ -8,7 +8,7 @@ use std::{fs::File, path::Path};
 // TODO: We should get a lot of reflection data at compile-time
 // TODO: Type safery for shader kind (Vertex, Fragment, Compute)?
 pub struct Shader {
-    module: vk::ShaderModule,
+    pub module: vk::ShaderModule,
 }
 
 impl Shader {
