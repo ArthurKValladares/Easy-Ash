@@ -1,5 +1,6 @@
 mod application;
 mod context;
+mod descriptors;
 mod device;
 mod entry;
 mod mem;
@@ -14,6 +15,7 @@ mod sync;
 pub use {
     application::{ApiVersion, ApplicationInfo},
     context::Context,
+    descriptors::{BindingDesc, DescriptorPool, DescriptorSet, DescriptorType, ShaderStage},
     device::Device,
     entry::{Entry, InstanceInfo},
     pipeline::graphics_pipeline::GraphicsPipeline,
