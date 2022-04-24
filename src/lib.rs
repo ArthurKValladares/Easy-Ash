@@ -17,7 +17,7 @@ pub use {
     entry::{Entry, InstanceInfo},
     render_pass::RenderPass,
     resources::{Buffer, BufferType, Image, ImageResolution, ImageType},
-    shader::Shader,
+    shader::{graphics_program::GraphicsProgram, Shader},
     surface::Surface,
     swapchain::Swapchain,
 };

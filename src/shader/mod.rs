@@ -1,10 +1,12 @@
+pub mod graphics_program;
+
 use crate::device::Device;
 use anyhow::Result;
 use ash::vk;
 use std::{fs::File, path::Path};
 
 // TODO: We should get a lot of reflection data at compile-time
-
+// TODO: Type safery for shader kind (Vertex, Fragment, Compute)?
 pub struct Shader {
     module: vk::ShaderModule,
 }
