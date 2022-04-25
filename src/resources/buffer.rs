@@ -60,6 +60,8 @@ impl Buffer {
             ..Default::default()
         };
         let memory = unsafe { device.device.allocate_memory(&allocate_info, None)? };
+        // TODO: offset at some point. Should I also bind this unconditionally?
+        unsafe { device.device.bind_buffer_memory(buffer, memory, 0)? };
         let ptr = if flags.contains(vk::MemoryPropertyFlags::HOST_VISIBLE) {
             unsafe {
                 let ptr = device.device.map_memory(
