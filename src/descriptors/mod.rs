@@ -96,7 +96,7 @@ impl BindingDesc {
 }
 
 pub struct DescriptorSet {
-    layout: vk::DescriptorSetLayout,
+    pub layout: vk::DescriptorSetLayout,
     descriptor_set: vk::DescriptorSet,
     write_descriptor_sets: Vec<vk::WriteDescriptorSet>,
 }
