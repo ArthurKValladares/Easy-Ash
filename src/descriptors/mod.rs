@@ -164,4 +164,13 @@ impl DescriptorSet {
             write_descriptor_sets,
         })
     }
+
+    pub fn update(&self, device: &Device) {
+        // TODO: Should have a way to update several sets together
+        unsafe {
+            device
+                .device
+                .update_descriptor_sets(&self.write_descriptor_sets, &[])
+        };
+    }
 }
