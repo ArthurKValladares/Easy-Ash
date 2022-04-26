@@ -1,5 +1,5 @@
 use crate::{
-    descriptors::DescriptorSet, device::Device, render_pass::RenderPass,
+    context::Context, descriptors::DescriptorSet, device::Device, render_pass::RenderPass,
     shader::graphics_program::GraphicsProgram, swapchain::Swapchain,
 };
 use anyhow::Result;
@@ -48,15 +48,8 @@ impl GraphicsPipeline {
         let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
             .topology(vk::PrimitiveTopology::TRIANGLE_LIST);
 
-        let viewports = [vk::Viewport {
-            x: 0.0,
-            y: 0.0,
-            width: swapchain.surface_data.resolution.width as f32,
-            height: swapchain.surface_data.resolution.height as f32,
-            min_depth: 0.0,
-            max_depth: 1.0,
-        }];
-        let scissors = [swapchain.surface_data.resolution.into()];
+        let viewports = [swapchain.viewport()];
+        let scissors = [swapchain.scissor()];
 
         let viewport_state_info = vk::PipelineViewportStateCreateInfo::builder()
             .scissors(&scissors)
@@ -132,5 +125,15 @@ impl GraphicsPipeline {
         let pipeline = graphics_pipelines[0];
 
         Ok(Self { layout, pipeline })
+    }
+
+    pub fn bind(&self, device: &Device, context: &Context) {
+        unsafe {
+            device.device.cmd_bind_pipeline(
+                context.command_buffer,
+                vk::PipelineBindPoint::GRAPHICS,
+                self.pipeline,
+            )
+        };
     }
 }

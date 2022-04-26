@@ -1,4 +1,4 @@
-use crate::{device::Device, swapchain::Swapchain};
+use crate::{context::Context, device::Device, swapchain::Swapchain};
 use anyhow::Result;
 use ash::vk;
 
@@ -26,6 +26,7 @@ pub struct RenderPass {
     pub render_pass: vk::RenderPass,
     pub framebuffers: Vec<vk::Framebuffer>,
     clear_values: Vec<vk::ClearValue>,
+    render_area: vk::Rect2D,
 }
 
 impl RenderPass {
@@ -89,11 +90,34 @@ impl RenderPass {
                 ret
             })
             .collect::<Vec<_>>();
+        // TODO: Make this configurable
+        let render_area = swapchain.surface_data.resolution.into();
 
         Ok(Self {
             render_pass,
             framebuffers,
             clear_values,
+            render_area,
         })
+    }
+
+    pub fn begin(&self, device: &Device, context: &Context, present_index: u32) {
+        let render_pass_begin_info = vk::RenderPassBeginInfo::builder()
+            .render_pass(self.render_pass)
+            .framebuffer(self.framebuffers[present_index as usize])
+            .render_area(self.render_area)
+            .clear_values(&self.clear_values);
+
+        unsafe {
+            device.device.cmd_begin_render_pass(
+                context.command_buffer,
+                &render_pass_begin_info,
+                vk::SubpassContents::INLINE,
+            )
+        };
+    }
+
+    pub fn end(&self, device: &Device, context: &Context) {
+        unsafe { device.device.cmd_end_render_pass(context.command_buffer) };
     }
 }

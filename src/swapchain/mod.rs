@@ -111,6 +111,23 @@ impl Swapchain {
         self.surface_data.resolution.height
     }
 
+    // TODO: Wrapper type
+    pub fn viewport(&self) -> vk::Viewport {
+        vk::Viewport {
+            x: 0.0,
+            y: 0.0,
+            width: self.surface_data.resolution.width as f32,
+            height: self.surface_data.resolution.height as f32,
+            min_depth: 0.0,
+            max_depth: 1.0,
+        }
+    }
+
+    // TODO: Wrapper type
+    pub fn scissor(&self) -> vk::Rect2D {
+        self.surface_data.resolution.into()
+    }
+
     pub fn acquire_next_image_index(&self, semaphore: &Semaphore) -> Result<u32> {
         // TODO: Hanbdle the bool return
         let (index, _) = unsafe {
@@ -122,5 +139,27 @@ impl Swapchain {
             )?
         };
         Ok(index)
+    }
+
+    pub fn present(
+        &self,
+        device: &Device,
+        wait_semaphores: &[&Semaphore],
+        image_indices: &[u32],
+    ) -> Result<()> {
+        let wait_semaphores = wait_semaphores
+            .iter()
+            .map(|semaphore| semaphore.semaphore)
+            .collect::<Vec<_>>();
+        let present_info = vk::PresentInfoKHR::builder()
+            .wait_semaphores(&wait_semaphores)
+            .swapchains(std::slice::from_ref(&self.swapchain))
+            .image_indices(&image_indices);
+
+        unsafe {
+            self.loader
+                .queue_present(device.present_queue, &present_info)?;
+        }
+        Ok(())
     }
 }

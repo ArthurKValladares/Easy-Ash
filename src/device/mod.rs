@@ -1,4 +1,7 @@
-use crate::{entry::Entry, surface::Surface};
+use crate::{
+    context::Context, entry::Entry, resources::buffer::Buffer, surface::Surface,
+    swapchain::Swapchain,
+};
 use anyhow::Result;
 use ash::vk;
 use thiserror::Error;
@@ -91,5 +94,27 @@ impl Device {
             present_queue,
             command_pool,
         })
+    }
+
+    // TODO: Better name/abstraction
+    pub fn set_viewport_and_scissor(&self, context: &Context, swapchain: &Swapchain) {
+        // TODO: Don't calculate viewport/scissor on-demand, maybe don't tie to swapchain
+        unsafe {
+            self.device
+                .cmd_set_viewport(context.command_buffer, 0, &[swapchain.viewport()]);
+            self.device
+                .cmd_set_scissor(context.command_buffer, 0, &[swapchain.scissor()]);
+        }
+    }
+
+    pub fn bind_index_buffer(&self, context: &Context, buffer: &Buffer) {
+        unsafe {
+            self.device.cmd_bind_index_buffer(
+                context.command_buffer,
+                buffer.buffer,
+                0,
+                vk::IndexType::UINT32,
+            );
+        }
     }
 }
