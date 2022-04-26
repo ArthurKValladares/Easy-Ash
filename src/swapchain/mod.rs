@@ -2,6 +2,7 @@ use crate::{
     device::Device,
     entry::Entry,
     surface::{Surface, SurfaceData},
+    sync::Semaphore,
 };
 use anyhow::Result;
 use ash::vk;
@@ -9,7 +10,7 @@ use ash::vk;
 pub struct Swapchain {
     pub surface: Surface,
     pub surface_data: SurfaceData,
-    pub swapchain_loader: ash::extensions::khr::Swapchain,
+    pub loader: ash::extensions::khr::Swapchain,
     pub swapchain: vk::SwapchainKHR,
     pub present_images: Vec<vk::Image>,
     pub present_image_views: Vec<vk::ImageView>,
@@ -45,8 +46,7 @@ impl Swapchain {
             .cloned()
             .find(|&mode| mode == vk::PresentModeKHR::MAILBOX)
             .unwrap_or(vk::PresentModeKHR::FIFO);
-        let swapchain_loader =
-            ash::extensions::khr::Swapchain::new(&entry.instance, &device.device);
+        let loader = ash::extensions::khr::Swapchain::new(&entry.instance, &device.device);
 
         let swapchain_create_info = vk::SwapchainCreateInfoKHR::builder()
             .surface(surface.raw)
@@ -62,9 +62,9 @@ impl Swapchain {
             .clipped(true)
             .image_array_layers(1);
 
-        let swapchain = unsafe { swapchain_loader.create_swapchain(&swapchain_create_info, None)? };
+        let swapchain = unsafe { loader.create_swapchain(&swapchain_create_info, None)? };
 
-        let present_images = unsafe { swapchain_loader.get_swapchain_images(swapchain)? };
+        let present_images = unsafe { loader.get_swapchain_images(swapchain)? };
         let present_image_views: Vec<vk::ImageView> = present_images
             .iter()
             .map(|&image| {
@@ -92,7 +92,7 @@ impl Swapchain {
         Ok(Self {
             surface,
             surface_data,
-            swapchain_loader,
+            loader,
             swapchain,
             present_images,
             present_image_views,
@@ -109,5 +109,18 @@ impl Swapchain {
 
     pub fn height(&self) -> u32 {
         self.surface_data.resolution.height
+    }
+
+    pub fn acquire_next_image_index(&self, semaphore: &Semaphore) -> Result<u32> {
+        // TODO: Hanbdle the bool return
+        let (index, _) = unsafe {
+            self.loader.acquire_next_image(
+                self.swapchain,
+                std::u64::MAX,
+                semaphore.semaphore,
+                vk::Fence::null(),
+            )?
+        };
+        Ok(index)
     }
 }

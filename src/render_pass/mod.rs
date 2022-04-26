@@ -2,13 +2,38 @@ use crate::{device::Device, swapchain::Swapchain};
 use anyhow::Result;
 use ash::vk;
 
+#[derive(Debug, Copy, Clone)]
+pub enum ClearValue {
+    // TODO: Vec4
+    Color([f32; 4]),
+    Depth { depth: f32, stencil: u32 },
+}
+
+impl From<ClearValue> for vk::ClearValue {
+    fn from(value: ClearValue) -> Self {
+        match value {
+            ClearValue::Color(float32) => vk::ClearValue {
+                color: vk::ClearColorValue { float32 },
+            },
+            ClearValue::Depth { depth, stencil } => vk::ClearValue {
+                depth_stencil: vk::ClearDepthStencilValue { depth, stencil },
+            },
+        }
+    }
+}
+
 pub struct RenderPass {
     pub render_pass: vk::RenderPass,
     pub framebuffers: Vec<vk::Framebuffer>,
+    clear_values: Vec<vk::ClearValue>,
 }
 
 impl RenderPass {
-    pub fn new(device: &Device, swapchain: &Swapchain) -> Result<Self> {
+    pub fn new(
+        device: &Device,
+        swapchain: &Swapchain,
+        clear_values: &[ClearValue],
+    ) -> Result<Self> {
         // TODO: hard-coded to only take a color attachment with a single subpass for now. More work on better abstraction later
         let renderpass_attachments = [vk::AttachmentDescription {
             format: swapchain.surface_data.format.format,
@@ -57,9 +82,18 @@ impl RenderPass {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
+        let clear_values = clear_values
+            .iter()
+            .map(|val| {
+                let ret: vk::ClearValue = (*val).into();
+                ret
+            })
+            .collect::<Vec<_>>();
+
         Ok(Self {
             render_pass,
             framebuffers,
+            clear_values,
         })
     }
 }

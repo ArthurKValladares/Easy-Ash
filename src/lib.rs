@@ -22,9 +22,10 @@ pub use {
     device::Device,
     entry::{Entry, InstanceInfo},
     pipeline::graphics_pipeline::GraphicsPipeline,
-    render_pass::RenderPass,
+    render_pass::{ClearValue, RenderPass},
     resources::{Buffer, BufferType, Image, ImageResolution, ImageType},
     shader::{graphics_program::GraphicsProgram, Shader},
     surface::Surface,
     swapchain::Swapchain,
+    sync::{Fence, Semaphore},
 };
