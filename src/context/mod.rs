@@ -1,4 +1,7 @@
-use crate::device::Device;
+use crate::{
+    device::Device,
+    sync::{Fence, Semaphore},
+};
 use anyhow::Result;
 use ash::vk;
 
@@ -26,7 +29,10 @@ impl Context {
         })
     }
 
-    pub fn begin(&self, device: &Device) -> Result<()> {
+    pub fn begin(&self, device: &Device, fence: &Fence) -> Result<()> {
+        fence.wait(device);
+        fence.reset(device);
+
         unsafe {
             device.device.reset_command_buffer(
                 self.command_buffer,
@@ -46,18 +52,39 @@ impl Context {
         Ok(())
     }
 
-    pub fn end(&self, device: &Device) -> Result<()> {
+    pub fn end(
+        &self,
+        device: &Device,
+        wait_semaphore: &Semaphore,
+        signal_semaphore: &Semaphore,
+        fence: &Fence,
+    ) -> Result<()> {
         unsafe { device.device.end_command_buffer(self.command_buffer)? };
+        // TODO: No longer hard-code mask, better abstraction in general
+        device.queue_submit(
+            self,
+            wait_semaphore,
+            signal_semaphore,
+            fence,
+            &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT],
+        )?;
         Ok(())
     }
 
-    pub fn record<F>(&self, device: &Device, f: F) -> Result<()>
+    pub fn record<F>(
+        &self,
+        device: &Device,
+        wait_semaphore: &Semaphore,
+        signal_semaphore: &Semaphore,
+        fence: &Fence,
+        f: F,
+    ) -> Result<()>
     where
         F: FnOnce(&Device, &Context),
     {
-        self.begin(device)?;
+        self.begin(device, fence)?;
         f(device, &self);
-        self.end(&device)?;
+        self.end(&device, wait_semaphore, signal_semaphore, fence)?;
         Ok(())
     }
 }

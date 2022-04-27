@@ -17,6 +17,21 @@ impl Fence {
     }
 }
 
+impl Fence {
+    pub fn wait(&self, device: &Device) -> Result<()> {
+        unsafe {
+            device
+                .device
+                .wait_for_fences(&[self.fence], true, std::u64::MAX)?
+        };
+        Ok(())
+    }
+
+    pub fn reset(&self, device: &Device) -> Result<()> {
+        unsafe { device.device.reset_fences(&[self.fence])? };
+        Ok(())
+    }
+}
 pub struct Semaphore {
     pub semaphore: vk::Semaphore,
 }

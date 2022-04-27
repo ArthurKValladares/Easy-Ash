@@ -1,6 +1,10 @@
 use crate::{
-    context::Context, entry::Entry, resources::buffer::Buffer, surface::Surface,
+    context::Context,
+    entry::Entry,
+    resources::buffer::Buffer,
+    surface::Surface,
     swapchain::Swapchain,
+    sync::{Fence, Semaphore},
 };
 use anyhow::Result;
 use ash::vk;
@@ -16,6 +20,7 @@ pub struct Device {
     pub p_device: vk::PhysicalDevice,
     pub memory_properties: vk::PhysicalDeviceMemoryProperties,
     pub device: ash::Device,
+    // TODO: Queue abstraction
     pub queue_family_index: u32,
     pub present_queue: vk::Queue,
     pub command_pool: vk::CommandPool,
@@ -116,5 +121,37 @@ impl Device {
                 vk::IndexType::UINT32,
             );
         }
+    }
+
+    pub fn draw_indexed(&self, context: &Context, index_count: u32) {
+        // TODO: Hook up rest of the params
+        unsafe {
+            self.device
+                .cmd_draw_indexed(context.command_buffer, index_count, 1, 0, 0, 1);
+        }
+    }
+
+    pub fn queue_submit(
+        &self,
+        context: &Context,
+        wait_semaphore: &Semaphore,
+        signal_semaphore: &Semaphore,
+        fence: &Fence,
+        wait_mask: &[vk::PipelineStageFlags],
+    ) -> Result<()> {
+        let command_buffers = vec![context.command_buffer];
+
+        let submit_info = vk::SubmitInfo::builder()
+            .wait_semaphores(&[wait_semaphore.semaphore])
+            .wait_dst_stage_mask(wait_mask)
+            .command_buffers(&command_buffers)
+            .signal_semaphores(&[signal_semaphore.semaphore])
+            .build();
+
+        unsafe {
+            self.device
+                .queue_submit(self.present_queue, &[submit_info], fence.fence)?
+        };
+        Ok(())
     }
 }

@@ -136,4 +136,22 @@ impl GraphicsPipeline {
             )
         };
     }
+
+    pub fn bind_descriptor_set(
+        &self,
+        device: &Device,
+        context: &Context,
+        descriptor_set: &DescriptorSet,
+    ) {
+        unsafe {
+            device.device.cmd_bind_descriptor_sets(
+                context.command_buffer,
+                vk::PipelineBindPoint::GRAPHICS,
+                self.layout,
+                0,
+                &[descriptor_set.descriptor_set],
+                &[],
+            );
+        }
+    }
 }
