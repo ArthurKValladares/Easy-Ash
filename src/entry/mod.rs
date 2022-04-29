@@ -88,4 +88,11 @@ impl Entry {
             debug_utils,
         })
     }
+
+    pub unsafe fn clean(&self) {
+        if let Some(debug_utils) = &self.debug_utils {
+            debug_utils.clean();
+        }
+        self.instance.destroy_instance(None);
+    }
 }

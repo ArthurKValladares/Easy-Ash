@@ -27,6 +27,11 @@ impl DebugUtils {
         let callback = unsafe { loader.create_debug_utils_messenger(&debug_info, None) }?;
         Ok(Self { loader, callback })
     }
+
+    pub unsafe fn clean(&self) {
+        self.loader
+            .destroy_debug_utils_messenger(self.callback, None);
+    }
 }
 
 unsafe extern "system" fn vulkan_debug_callback(

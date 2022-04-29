@@ -110,4 +110,9 @@ impl Image {
             view,
         })
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_image(self.image, None);
+        device.device.free_memory(self.memory, None);
+    }
 }

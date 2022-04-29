@@ -20,4 +20,8 @@ impl Shader {
         let module = unsafe { device.device.create_shader_module(&shader_info, None)? };
         Ok(Self { module })
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_shader_module(self.module, None);
+    }
 }

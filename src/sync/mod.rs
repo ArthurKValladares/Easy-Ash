@@ -15,6 +15,10 @@ impl Fence {
 
         Ok(Self { fence })
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_fence(self.fence, None);
+    }
 }
 
 impl Fence {
@@ -43,5 +47,9 @@ impl Semaphore {
         let semaphore = unsafe { device.device.create_semaphore(&create_info, None)? };
 
         Ok(Self { semaphore })
+    }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_semaphore(self.semaphore, None);
     }
 }

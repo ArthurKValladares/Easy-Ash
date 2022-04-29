@@ -154,11 +154,17 @@ impl Device {
         };
         Ok(())
     }
-}
 
-impl Drop for Device {
-    fn drop(&mut self) {
+    pub fn wait_idle(&self) -> Result<()> {
         unsafe {
+            self.device.device_wait_idle()?;
+        }
+        Ok(())
+    }
+
+    pub unsafe fn clean(&self) {
+        unsafe {
+            self.device.destroy_command_pool(self.command_pool, None);
             self.device.destroy_device(None);
         }
     }

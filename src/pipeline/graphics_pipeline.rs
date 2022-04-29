@@ -154,4 +154,9 @@ impl GraphicsPipeline {
             );
         }
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_pipeline(self.pipeline, None);
+        device.device.destroy_pipeline_layout(self.layout, None);
+    }
 }

@@ -99,4 +99,9 @@ impl Buffer {
             Err(MemoryCopyError::CannotTransferFromCPU)
         }
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_buffer(self.buffer, None);
+        device.device.free_memory(self.memory, None);
+    }
 }

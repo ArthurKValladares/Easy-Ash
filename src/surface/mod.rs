@@ -19,6 +19,10 @@ impl Surface {
 
         Ok(Self { loader, raw })
     }
+
+    pub unsafe fn clean(&self) {
+        self.loader.destroy_surface(self.raw, None);
+    }
 }
 
 pub struct SurfaceData {

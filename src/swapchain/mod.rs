@@ -162,4 +162,12 @@ impl Swapchain {
         }
         Ok(())
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        for image_view in &self.present_image_views {
+            device.device.destroy_image_view(*image_view, None);
+        }
+        self.loader.destroy_swapchain(self.swapchain, None);
+        self.surface.clean();
+    }
 }

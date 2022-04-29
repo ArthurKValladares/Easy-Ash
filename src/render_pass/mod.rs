@@ -120,4 +120,11 @@ impl RenderPass {
     pub fn end(&self, device: &Device, context: &Context) {
         unsafe { device.device.cmd_end_render_pass(context.command_buffer) };
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        for framebuffer in &self.framebuffers {
+            device.device.destroy_framebuffer(*framebuffer, None);
+        }
+        device.device.destroy_render_pass(self.render_pass, None);
+    }
 }

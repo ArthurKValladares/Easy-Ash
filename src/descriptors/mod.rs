@@ -34,6 +34,10 @@ impl DescriptorPool {
 
         Ok(Self { pool })
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_descriptor_pool(self.pool, None);
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -172,5 +176,11 @@ impl DescriptorSet {
                 .device
                 .update_descriptor_sets(&self.write_descriptor_sets, &[])
         };
+    }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device
+            .device
+            .destroy_descriptor_set_layout(self.layout, None);
     }
 }
