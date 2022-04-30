@@ -145,7 +145,6 @@ impl DescriptorSet {
             .iter()
             .enumerate()
             .map(|(idx, desc)| {
-                // TODO: Need to hook up buffer pointer
                 let write = vk::WriteDescriptorSet::builder()
                     .dst_set(descriptor_set)
                     .dst_binding(idx as u32)
