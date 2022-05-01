@@ -1,19 +1,21 @@
 use crate::{context::Context, device::Device, swapchain::Swapchain};
 use anyhow::Result;
 use ash::vk;
+use math::vec::Vec4;
 
 #[derive(Debug, Copy, Clone)]
 pub enum ClearValue {
-    // TODO: Vec4
-    Color([f32; 4]),
+    Color(Vec4),
     Depth { depth: f32, stencil: u32 },
 }
 
 impl From<ClearValue> for vk::ClearValue {
     fn from(value: ClearValue) -> Self {
         match value {
-            ClearValue::Color(float32) => vk::ClearValue {
-                color: vk::ClearColorValue { float32 },
+            ClearValue::Color(vec) => vk::ClearValue {
+                color: vk::ClearColorValue {
+                    float32: vec.into(),
+                },
             },
             ClearValue::Depth { depth, stencil } => vk::ClearValue {
                 depth_stencil: vk::ClearDepthStencilValue { depth, stencil },

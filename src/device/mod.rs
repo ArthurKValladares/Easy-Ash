@@ -20,7 +20,6 @@ pub struct Device {
     pub p_device: vk::PhysicalDevice,
     pub memory_properties: vk::PhysicalDeviceMemoryProperties,
     pub device: ash::Device,
-    // TODO: Queue abstraction
     pub queue_family_index: u32,
     pub present_queue: vk::Queue,
     pub command_pool: vk::CommandPool,

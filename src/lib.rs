@@ -29,3 +29,5 @@ pub use {
     swapchain::Swapchain,
     sync::{Fence, Semaphore},
 };
+
+pub use math;
