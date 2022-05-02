@@ -1,5 +1,6 @@
 use crate::{
     device::Device,
+    pipeline::PipelineStages,
     sync::{Fence, Semaphore},
 };
 use anyhow::Result;
@@ -58,16 +59,15 @@ impl Context {
         wait_semaphore: &Semaphore,
         signal_semaphore: &Semaphore,
         fence: &Fence,
+        wait_mask: &[PipelineStages],
     ) -> Result<()> {
         unsafe { device.device.end_command_buffer(self.command_buffer)? };
-        // TODO: No longer hard-code mask, better abstraction in general
-        device.queue_submit(
-            self,
-            wait_semaphore,
-            signal_semaphore,
-            fence,
-            &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT],
-        )?;
+        // TODO: better abstraction for wait masks
+        let wait_mask = wait_mask
+            .iter()
+            .map(|stage| (*stage).into())
+            .collect::<Vec<vk::PipelineStageFlags>>();
+        device.queue_submit(self, wait_semaphore, signal_semaphore, fence, &wait_mask)?;
         Ok(())
     }
 
@@ -77,6 +77,7 @@ impl Context {
         wait_semaphore: &Semaphore,
         signal_semaphore: &Semaphore,
         fence: &Fence,
+        wait_mask: &[PipelineStages],
         f: F,
     ) -> Result<()>
     where
@@ -84,7 +85,7 @@ impl Context {
     {
         self.begin(device, fence)?;
         f(device, &self);
-        self.end(&device, wait_semaphore, signal_semaphore, fence)?;
+        self.end(&device, wait_semaphore, signal_semaphore, fence, wait_mask)?;
         Ok(())
     }
 }

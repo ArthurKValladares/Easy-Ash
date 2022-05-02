@@ -21,7 +21,7 @@ pub use {
     },
     device::Device,
     entry::{Entry, InstanceInfo},
-    pipeline::graphics_pipeline::GraphicsPipeline,
+    pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
     render_pass::{ClearValue, RenderPass},
     resources::{Buffer, BufferType, Image, ImageResolution, ImageType},
     shader::{graphics_program::GraphicsProgram, Shader},
