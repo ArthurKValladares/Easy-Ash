@@ -17,13 +17,20 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-    pub fn new(
+    fn create_swapchain_structures(
         entry: &Entry,
         device: &Device,
-        surface: Surface,
+        surface: &Surface,
+        old_swapchain: Option<vk::SwapchainKHR>,
         width: u32,
         height: u32,
-    ) -> Result<Self> {
+    ) -> Result<(
+        SurfaceData,
+        ash::extensions::khr::Swapchain,
+        vk::SwapchainKHR,
+        Vec<vk::Image>,
+        Vec<vk::ImageView>,
+    )> {
         let surface_data = SurfaceData::new(&surface, device, width, height)?;
 
         let pre_transform = if surface_data
@@ -60,7 +67,12 @@ impl Swapchain {
             .composite_alpha(vk::CompositeAlphaFlagsKHR::OPAQUE)
             .present_mode(present_mode)
             .clipped(true)
-            .image_array_layers(1);
+            .image_array_layers(1)
+            .old_swapchain(if let Some(old_swapchain) = old_swapchain {
+                old_swapchain
+            } else {
+                vk::SwapchainKHR::null()
+            });
 
         let swapchain = unsafe { loader.create_swapchain(&swapchain_create_info, None)? };
 
@@ -89,6 +101,24 @@ impl Swapchain {
             })
             .collect::<Result<_, _>>()?;
 
+        Ok((
+            surface_data,
+            loader,
+            swapchain,
+            present_images,
+            present_image_views,
+        ))
+    }
+
+    pub fn new(
+        entry: &Entry,
+        device: &Device,
+        surface: Surface,
+        width: u32,
+        height: u32,
+    ) -> Result<Self> {
+        let (surface_data, loader, swapchain, present_images, present_image_views) =
+            Self::create_swapchain_structures(entry, device, &surface, None, width, height)?;
         Ok(Self {
             surface,
             surface_data,
@@ -97,6 +127,30 @@ impl Swapchain {
             present_images,
             present_image_views,
         })
+    }
+
+    pub fn resize(
+        &mut self,
+        entry: &Entry,
+        device: &Device,
+        width: u32,
+        height: u32,
+    ) -> Result<()> {
+        let (surface_data, loader, swapchain, present_images, present_image_views) =
+            Self::create_swapchain_structures(
+                entry,
+                device,
+                &self.surface,
+                Some(self.swapchain),
+                width,
+                height,
+            )?;
+        self.surface_data = surface_data;
+        self.loader = loader;
+        self.swapchain = swapchain;
+        self.present_images = present_images;
+        self.present_image_views = present_image_views;
+        Ok(())
     }
 
     pub fn resolution(&self) -> vk::Extent2D {

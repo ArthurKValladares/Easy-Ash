@@ -32,11 +32,11 @@ pub struct RenderPass {
 }
 
 impl RenderPass {
-    pub fn new(
+    fn create_render_pass_structures(
         device: &Device,
         swapchain: &Swapchain,
-        clear_values: &[ClearValue],
-    ) -> Result<Self> {
+        clear_values: &[vk::ClearValue],
+    ) -> Result<(vk::RenderPass, Vec<vk::Framebuffer>, vk::Rect2D)> {
         // TODO: hard-coded to only take a color attachment with a single subpass for now. More work on better abstraction later
         let renderpass_attachments = [vk::AttachmentDescription {
             format: swapchain.surface_data.format.format,
@@ -85,6 +85,17 @@ impl RenderPass {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
+        // TODO: Make this configurable
+        let render_area = swapchain.surface_data.resolution.into();
+
+        Ok((render_pass, framebuffers, render_area))
+    }
+
+    pub fn new(
+        device: &Device,
+        swapchain: &Swapchain,
+        clear_values: &[ClearValue],
+    ) -> Result<Self> {
         let clear_values = clear_values
             .iter()
             .map(|val| {
@@ -92,8 +103,8 @@ impl RenderPass {
                 ret
             })
             .collect::<Vec<_>>();
-        // TODO: Make this configurable
-        let render_area = swapchain.surface_data.resolution.into();
+        let (render_pass, framebuffers, render_area) =
+            Self::create_render_pass_structures(device, swapchain, &clear_values)?;
 
         Ok(Self {
             render_pass,
@@ -101,6 +112,20 @@ impl RenderPass {
             clear_values,
             render_area,
         })
+    }
+
+    pub fn resize(&mut self, device: &Device, swapchain: &Swapchain) -> Result<()> {
+        // TODO: Should I wait idle here?
+        device.wait_idle();
+        unsafe {
+            self.clean_framebuffers(device);
+        }
+        let (render_pass, framebuffers, render_area) =
+            Self::create_render_pass_structures(device, swapchain, &self.clear_values)?;
+        self.render_pass = render_pass;
+        self.framebuffers = framebuffers;
+        self.render_area = render_area;
+        Ok(())
     }
 
     pub fn begin(&self, device: &Device, context: &Context, present_index: u32) {
@@ -123,10 +148,14 @@ impl RenderPass {
         unsafe { device.device.cmd_end_render_pass(context.command_buffer) };
     }
 
-    pub unsafe fn clean(&self, device: &Device) {
+    unsafe fn clean_framebuffers(&self, device: &Device) {
         for framebuffer in &self.framebuffers {
             device.device.destroy_framebuffer(*framebuffer, None);
         }
+    }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        self.clean_framebuffers(device);
         device.device.destroy_render_pass(self.render_pass, None);
     }
 }
