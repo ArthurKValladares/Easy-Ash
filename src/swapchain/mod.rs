@@ -101,6 +101,12 @@ impl Swapchain {
             })
             .collect::<Result<_, _>>()?;
 
+        if let Some(old_swapchain) = old_swapchain {
+            unsafe {
+                loader.destroy_swapchain(old_swapchain, None);
+            }
+        }
+
         Ok((
             surface_data,
             loader,
@@ -136,6 +142,9 @@ impl Swapchain {
         width: u32,
         height: u32,
     ) -> Result<()> {
+        unsafe {
+            self.clean_image_views(device);
+        }
         let (surface_data, loader, swapchain, present_images, present_image_views) =
             Self::create_swapchain_structures(
                 entry,
@@ -217,10 +226,14 @@ impl Swapchain {
         Ok(())
     }
 
-    pub unsafe fn clean(&self, device: &Device) {
+    unsafe fn clean_image_views(&self, device: &Device) {
         for image_view in &self.present_image_views {
             device.device.destroy_image_view(*image_view, None);
         }
+    }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        self.clean_image_views(device);
         self.loader.destroy_swapchain(self.swapchain, None);
         self.surface.clean();
     }

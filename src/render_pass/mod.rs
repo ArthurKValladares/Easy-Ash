@@ -115,10 +115,8 @@ impl RenderPass {
     }
 
     pub fn resize(&mut self, device: &Device, swapchain: &Swapchain) -> Result<()> {
-        // TODO: Should I wait idle here?
-        device.wait_idle();
         unsafe {
-            self.clean_framebuffers(device);
+            self.clean(device);
         }
         let (render_pass, framebuffers, render_area) =
             Self::create_render_pass_structures(device, swapchain, &self.clear_values)?;
