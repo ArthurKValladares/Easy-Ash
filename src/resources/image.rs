@@ -100,6 +100,8 @@ impl Image {
 
         let memory = unsafe { device.device.allocate_memory(&image_allocate_info, None)? };
 
+        unsafe { device.device.bind_image_memory(image, memory, 0)? };
+
         let image_view_info = vk::ImageViewCreateInfo::builder()
             .subresource_range(
                 vk::ImageSubresourceRange::builder()
@@ -123,6 +125,7 @@ impl Image {
 
     pub unsafe fn clean(&self, device: &Device) {
         device.device.destroy_image(self.image, None);
+        device.device.destroy_image_view(self.view, None);
         device.device.free_memory(self.memory, None);
     }
 }
