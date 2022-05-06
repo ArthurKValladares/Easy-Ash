@@ -23,11 +23,11 @@ pub use {
     entry::{Entry, InstanceInfo},
     pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
     render_pass::{ClearValue, RenderPass},
-    resources::{Buffer, BufferType, Image, ImageResolution, ImageType},
+    resources::{Buffer, BufferType, Image, ImageLayout, ImageResolution, ImageType},
     shader::{graphics_program::GraphicsProgram, Shader},
     surface::Surface,
     swapchain::Swapchain,
-    sync::{Fence, Semaphore},
+    sync::{AccessMask, Fence, ImageMemoryBarrier, Semaphore},
 };
 
 pub use math;

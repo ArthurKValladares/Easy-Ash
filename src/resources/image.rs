@@ -9,6 +9,19 @@ pub enum ImageCreationError {
     CouldNotFindMemoryIndex,
 }
 
+pub enum ImageLayout {
+    Undefined,
+    DepthStencil,
+}
+
+impl From<ImageLayout> for vk::ImageLayout {
+    fn from(layout: ImageLayout) -> Self {
+        match layout {
+            ImageLayout::Undefined => vk::ImageLayout::UNDEFINED,
+            ImageLayout::DepthStencil => vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        }
+    }
+}
 #[derive(Debug, Copy, Clone)]
 pub struct ImageResolution {
     pub width: u32,
@@ -43,21 +56,21 @@ pub enum ImageType {
 }
 
 impl ImageType {
-    fn format(&self) -> vk::Format {
+    pub fn format(&self) -> vk::Format {
         match self {
             ImageType::Color => todo!(),
             ImageType::Depth => vk::Format::D16_UNORM,
         }
     }
 
-    fn usage(&self) -> vk::ImageUsageFlags {
+    pub fn usage(&self) -> vk::ImageUsageFlags {
         match self {
             ImageType::Color => todo!(),
             ImageType::Depth => vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT,
         }
     }
 
-    fn aspect_mask(&self) -> vk::ImageAspectFlags {
+    pub fn aspect_mask(&self) -> vk::ImageAspectFlags {
         match self {
             ImageType::Color => todo!(),
             ImageType::Depth => vk::ImageAspectFlags::DEPTH,
@@ -67,9 +80,10 @@ impl ImageType {
 
 #[derive(Debug)]
 pub struct Image {
-    image: vk::Image,
-    memory: vk::DeviceMemory,
-    view: vk::ImageView,
+    pub image: vk::Image,
+    pub memory: vk::DeviceMemory,
+    pub view: vk::ImageView,
+    pub ty: ImageType,
 }
 
 impl Image {
@@ -120,6 +134,7 @@ impl Image {
             image,
             memory,
             view,
+            ty,
         })
     }
 

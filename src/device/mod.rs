@@ -1,10 +1,11 @@
 use crate::{
     context::Context,
     entry::Entry,
+    pipeline::PipelineStages,
     resources::buffer::Buffer,
     surface::Surface,
     swapchain::Swapchain,
-    sync::{Fence, Semaphore},
+    sync::{Fence, ImageMemoryBarrier, Semaphore},
 };
 use anyhow::Result;
 use ash::vk;
@@ -133,18 +134,29 @@ impl Device {
     pub fn queue_submit(
         &self,
         context: &Context,
-        wait_semaphore: &Semaphore,
-        signal_semaphore: &Semaphore,
+        wait_semaphores: &[Semaphore],
+        signal_semaphores: &[Semaphore],
         fence: &Fence,
         wait_mask: &[vk::PipelineStageFlags],
     ) -> Result<()> {
         let command_buffers = vec![context.command_buffer];
 
+        // TODO: This is pretty bad. Find a better way to handle this and other similar
+        // cases with wrapper structs, like the one below
+        let wait_semaphores = wait_semaphores
+            .iter()
+            .map(|semaphore| semaphore.semaphore)
+            .collect::<Vec<_>>();
+        let signal_semaphores = signal_semaphores
+            .iter()
+            .map(|semaphore| semaphore.semaphore)
+            .collect::<Vec<_>>();
+
         let submit_info = vk::SubmitInfo::builder()
-            .wait_semaphores(&[wait_semaphore.semaphore])
+            .wait_semaphores(&wait_semaphores)
             .wait_dst_stage_mask(wait_mask)
             .command_buffers(&command_buffers)
-            .signal_semaphores(&[signal_semaphore.semaphore])
+            .signal_semaphores(&signal_semaphores)
             .build();
 
         unsafe {
@@ -152,6 +164,31 @@ impl Device {
                 .queue_submit(self.present_queue, &[submit_info], fence.fence)?
         };
         Ok(())
+    }
+
+    pub fn pipeline_image_barrier(
+        &self,
+        context: &Context,
+        src_stage: PipelineStages,
+        dst_stage: PipelineStages,
+        image_barriers: &[ImageMemoryBarrier],
+    ) {
+        let image_barriers = image_barriers
+            .iter()
+            .map(|image_barrier| image_barrier.raw)
+            .collect::<Vec<_>>();
+        // TODO: Hook up dependency flags
+        unsafe {
+            self.device.cmd_pipeline_barrier(
+                context.command_buffer,
+                src_stage.into(),
+                dst_stage.into(),
+                vk::DependencyFlags::empty(),
+                &[],
+                &[],
+                &image_barriers,
+            );
+        }
     }
 
     pub fn wait_idle(&self) -> Result<()> {

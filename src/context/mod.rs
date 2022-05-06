@@ -56,8 +56,8 @@ impl Context {
     pub fn end(
         &self,
         device: &Device,
-        wait_semaphore: &Semaphore,
-        signal_semaphore: &Semaphore,
+        wait_semaphores: &[Semaphore],
+        signal_semaphores: &[Semaphore],
         fence: &Fence,
         wait_mask: &[PipelineStages],
     ) -> Result<()> {
@@ -67,15 +67,15 @@ impl Context {
             .iter()
             .map(|stage| (*stage).into())
             .collect::<Vec<vk::PipelineStageFlags>>();
-        device.queue_submit(self, wait_semaphore, signal_semaphore, fence, &wait_mask)?;
+        device.queue_submit(self, wait_semaphores, signal_semaphores, fence, &wait_mask)?;
         Ok(())
     }
 
     pub fn record<F>(
         &self,
         device: &Device,
-        wait_semaphore: &Semaphore,
-        signal_semaphore: &Semaphore,
+        wait_semaphores: &[Semaphore],
+        signal_semaphores: &[Semaphore],
         fence: &Fence,
         wait_mask: &[PipelineStages],
         f: F,
@@ -85,7 +85,13 @@ impl Context {
     {
         self.begin(device, fence)?;
         f(device, &self);
-        self.end(&device, wait_semaphore, signal_semaphore, fence, wait_mask)?;
+        self.end(
+            &device,
+            wait_semaphores,
+            signal_semaphores,
+            fence,
+            wait_mask,
+        )?;
         Ok(())
     }
 }
