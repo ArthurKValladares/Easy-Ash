@@ -26,6 +26,16 @@ impl From<ImageResolution> for vk::Extent3D {
     }
 }
 
+impl From<vk::Extent2D> for ImageResolution {
+    fn from(extent: vk::Extent2D) -> ImageResolution {
+        ImageResolution {
+            width: extent.width,
+            height: extent.height,
+            depth: 1,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum ImageType {
     Color,
