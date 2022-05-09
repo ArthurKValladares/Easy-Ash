@@ -1,6 +1,12 @@
-use crate::{device::Device, mem};
+use crate::{
+    device::Device,
+    mem,
+    resources::buffer::{Buffer, BufferType},
+};
 use anyhow::Result;
 use ash::vk;
+use image::GenericImageView;
+use std::{fs::File, io::BufReader, path::Path};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -27,6 +33,16 @@ pub struct ImageResolution {
     pub width: u32,
     pub height: u32,
     pub depth: u32,
+}
+
+impl ImageResolution {
+    pub fn from_width_height(width: u32, height: u32) -> Self {
+        Self {
+            width,
+            height,
+            depth: 1,
+        }
+    }
 }
 
 impl From<ImageResolution> for vk::Extent3D {
@@ -58,21 +74,22 @@ pub enum ImageType {
 impl ImageType {
     pub fn format(&self) -> vk::Format {
         match self {
-            ImageType::Color => todo!(),
+            ImageType::Color => vk::Format::R8G8B8A8_UNORM,
             ImageType::Depth => vk::Format::D16_UNORM,
         }
     }
 
     pub fn usage(&self) -> vk::ImageUsageFlags {
         match self {
-            ImageType::Color => todo!(),
+            // TODO: Should not be like this for all color textures, probably
+            ImageType::Color => vk::ImageUsageFlags::TRANSFER_DST | vk::ImageUsageFlags::SAMPLED,
             ImageType::Depth => vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT,
         }
     }
 
     pub fn aspect_mask(&self) -> vk::ImageAspectFlags {
         match self {
-            ImageType::Color => todo!(),
+            ImageType::Color => vk::ImageAspectFlags::COLOR,
             ImageType::Depth => vk::ImageAspectFlags::DEPTH,
         }
     }
@@ -136,6 +153,20 @@ impl Image {
             view,
             ty,
         })
+    }
+
+    pub fn from_file(device: &Device, path: impl AsRef<Path>) -> Result<Self> {
+        let im = image::load(BufReader::new(File::open(path)?), image::ImageFormat::Bmp)?;
+        let (width, height) = im.dimensions();
+        let image_extent = vk::Extent2D { width, height };
+        let image_data = im.into_bytes();
+        let image_buffer = Buffer::from_data(device, BufferType::Staging, &image_data)?;
+        let image = Image::new(
+            device,
+            ImageResolution::from_width_height(width, height),
+            ImageType::Color,
+        )?;
+        Ok(image)
     }
 
     pub unsafe fn clean(&self, device: &Device) {

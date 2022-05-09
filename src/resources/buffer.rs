@@ -21,6 +21,7 @@ pub enum MemoryCopyError {
 pub enum BufferType {
     Index,
     Storage,
+    Staging,
 }
 
 impl BufferType {
@@ -28,6 +29,7 @@ impl BufferType {
         match self {
             BufferType::Index => vk::BufferUsageFlags::INDEX_BUFFER,
             BufferType::Storage => vk::BufferUsageFlags::STORAGE_BUFFER,
+            BufferType::Staging => vk::BufferUsageFlags::TRANSFER_SRC,
         }
     }
 }

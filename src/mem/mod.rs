@@ -16,8 +16,7 @@ pub fn find_memory_type_index(
 }
 
 pub fn size_of_slice<T>(data: &[T]) -> u64 {
-    let elem_size = std::mem::size_of::<T>();
-    (data.len() * elem_size) as u64
+    std::mem::size_of_val(data) as u64
 }
 
 pub unsafe fn mem_copy<T: Copy>(ptr: *mut std::ffi::c_void, data: &[T]) {
