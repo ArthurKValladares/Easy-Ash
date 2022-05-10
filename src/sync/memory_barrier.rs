@@ -1,8 +1,9 @@
-use crate::resources::image::{Image, ImageLayout};
+use crate::resources::ash_image::{Image, ImageLayout};
 use ash::vk;
 
 pub enum AccessMask {
     DepthStencil,
+    Transfer,
 }
 
 impl From<AccessMask> for vk::AccessFlags {
@@ -12,6 +13,7 @@ impl From<AccessMask> for vk::AccessFlags {
                 vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ
                     | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE
             }
+            AccessMask::Transfer => vk::AccessFlags::TRANSFER_WRITE,
         }
     }
 }

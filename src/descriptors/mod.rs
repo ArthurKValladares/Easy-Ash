@@ -1,4 +1,7 @@
-use crate::{device::Device, resources::buffer::Buffer};
+use crate::{
+    device::Device,
+    resources::{ash_image::Image, buffer::Buffer, sampler::Sampler},
+};
 use anyhow::Result;
 use ash::vk;
 
@@ -57,9 +60,26 @@ impl DescriptorBufferInfo {
 }
 
 #[derive(Debug, Copy, Clone)]
+pub struct DescriptorImageInfo {
+    info: vk::DescriptorImageInfo,
+}
+
+impl DescriptorImageInfo {
+    pub fn new(image: &Image, sampler: &Sampler) -> Self {
+        let info = vk::DescriptorImageInfo {
+            image_layout: vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
+            image_view: image.view,
+            sampler: sampler.sampler,
+        };
+        Self { info }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub enum DescriptorType {
     StorageBuffer(DescriptorBufferInfo),
     UniformBuffer(DescriptorBufferInfo),
+    CombinedImageSampler(DescriptorImageInfo),
 }
 
 impl From<DescriptorType> for vk::DescriptorType {
@@ -67,6 +87,7 @@ impl From<DescriptorType> for vk::DescriptorType {
         match ty {
             DescriptorType::StorageBuffer(_) => vk::DescriptorType::STORAGE_BUFFER,
             DescriptorType::UniformBuffer(_) => vk::DescriptorType::UNIFORM_BUFFER,
+            DescriptorType::CombinedImageSampler(_) => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
         }
     }
 }
@@ -155,6 +176,9 @@ impl DescriptorSet {
                     }
                     DescriptorType::UniformBuffer(info) => {
                         write.buffer_info(std::slice::from_ref(&info.info))
+                    }
+                    DescriptorType::CombinedImageSampler(info) => {
+                        write.image_info(std::slice::from_ref(&info.info))
                     }
                 }
                 .build()
