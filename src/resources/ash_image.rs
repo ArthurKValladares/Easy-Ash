@@ -165,8 +165,9 @@ impl Image {
         context: &Context,
         fence: &Fence,
         path: impl AsRef<Path>,
-    ) -> Result<Self> {
+    ) -> Result<(Self, Buffer)> {
         // TODO: hook up file format
+        // TODO: More efficient image transfers later
         let im = image::load(BufReader::new(File::open(path)?), image::ImageFormat::Png)?;
         let (width, height) = im.dimensions();
         let image_extent = vk::Extent2D { width, height };
@@ -238,7 +239,7 @@ impl Image {
             }
         });
 
-        Ok(image)
+        Ok((image, image_buffer))
     }
 
     pub unsafe fn clean(&self, device: &Device) {

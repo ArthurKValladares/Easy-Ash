@@ -26,4 +26,8 @@ impl Sampler {
 
         Ok(Self { sampler })
     }
+
+    pub unsafe fn clean(&self, device: &Device) {
+        device.device.destroy_sampler(self.sampler, None);
+    }
 }
