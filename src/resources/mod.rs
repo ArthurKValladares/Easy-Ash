@@ -5,5 +5,5 @@ pub(crate) mod sampler;
 pub use {
     ash_image::{Image, ImageLayout, ImageResolution, ImageType},
     buffer::{Buffer, BufferType},
-    sampler::Sampler,
+    sampler::{Sampler, SamplerFilter, SamplerWrapMode},
 };

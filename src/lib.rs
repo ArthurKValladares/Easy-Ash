@@ -23,7 +23,10 @@ pub use {
     entry::{Entry, InstanceInfo},
     pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
     render_pass::{ClearValue, RenderPass},
-    resources::{Buffer, BufferType, Image, ImageLayout, ImageResolution, ImageType, Sampler},
+    resources::{
+        Buffer, BufferType, Image, ImageLayout, ImageResolution, ImageType, Sampler, SamplerFilter,
+        SamplerWrapMode,
+    },
     shader::{graphics_program::GraphicsProgram, Shader},
     surface::Surface,
     swapchain::Swapchain,
