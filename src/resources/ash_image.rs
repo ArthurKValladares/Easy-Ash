@@ -167,7 +167,7 @@ impl Image {
         fence: &Fence,
         width: u32,
         height: u32,
-        image_data: Vec<u8>,
+        image_data: Bytes,
     ) -> Result<(Self, Buffer)> {
         let image_extent = vk::Extent2D { width, height };
         let image_buffer = Buffer::from_data(device, BufferType::Staging, &image_data)?;
@@ -250,7 +250,7 @@ impl Image {
         // TODO: More efficient image transfers later
         let im = image::load(BufReader::new(File::open(path)?), image::ImageFormat::Png)?;
         let (width, height) = im.dimensions();
-        let image_data = im.into_bytes();
+        let image_data = Bytes::from(im.into_bytes());
 
         Image::from_data_and_dims(device, context, fence, width, height, image_data)
     }
