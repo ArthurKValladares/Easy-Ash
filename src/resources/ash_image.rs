@@ -167,7 +167,7 @@ impl Image {
         fence: &Fence,
         width: u32,
         height: u32,
-        image_data: Bytes,
+        image_data: Vec<u8>,
     ) -> Result<(Self, Buffer)> {
         let image_extent = vk::Extent2D { width, height };
         let image_buffer = Buffer::from_data(device, BufferType::Staging, &image_data)?;
@@ -250,76 +250,9 @@ impl Image {
         // TODO: More efficient image transfers later
         let im = image::load(BufReader::new(File::open(path)?), image::ImageFormat::Png)?;
         let (width, height) = im.dimensions();
-        let image_extent = vk::Extent2D { width, height };
         let image_data = im.into_bytes();
-        let image_buffer = Buffer::from_data(device, BufferType::Staging, &image_data)?;
-        let image = Image::new(
-            device,
-            ImageResolution::from_width_height(width, height),
-            ImageType::Color,
-        )?;
 
-        context.record(&device, &[], &[], &fence, &[], |device, context| {
-            let layout_transition_barrier = ImageMemoryBarrier::new(
-                &image,
-                AccessMask::Transfer,
-                ImageLayout::Undefined,
-                ImageLayout::TransferDest,
-            );
-            device.pipeline_image_barrier(
-                context,
-                PipelineStages::BottomOfPipe,
-                PipelineStages::Transfer,
-                &[layout_transition_barrier],
-            );
-            // TODO: Abstract better later
-            let buffer_copy_regions = vk::BufferImageCopy::builder()
-                .image_subresource(
-                    vk::ImageSubresourceLayers::builder()
-                        .aspect_mask(vk::ImageAspectFlags::COLOR)
-                        .layer_count(1)
-                        .build(),
-                )
-                .image_extent(image_extent.into())
-                .build();
-
-            unsafe {
-                device.device.cmd_copy_buffer_to_image(
-                    context.command_buffer,
-                    image_buffer.buffer,
-                    image.image,
-                    vk::ImageLayout::TRANSFER_DST_OPTIMAL,
-                    &[buffer_copy_regions],
-                );
-            }
-            let texture_barrier_end = vk::ImageMemoryBarrier {
-                src_access_mask: vk::AccessFlags::TRANSFER_WRITE,
-                dst_access_mask: vk::AccessFlags::SHADER_READ,
-                old_layout: vk::ImageLayout::TRANSFER_DST_OPTIMAL,
-                new_layout: vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
-                image: image.image,
-                subresource_range: vk::ImageSubresourceRange {
-                    aspect_mask: vk::ImageAspectFlags::COLOR,
-                    level_count: 1,
-                    layer_count: 1,
-                    ..Default::default()
-                },
-                ..Default::default()
-            };
-            unsafe {
-                device.device.cmd_pipeline_barrier(
-                    context.command_buffer,
-                    vk::PipelineStageFlags::TRANSFER,
-                    vk::PipelineStageFlags::FRAGMENT_SHADER,
-                    vk::DependencyFlags::empty(),
-                    &[],
-                    &[],
-                    &[texture_barrier_end],
-                );
-            }
-        });
-
-        Ok((image, image_buffer))
+        Image::from_data_and_dims(device, context, fence, width, height, image_data)
     }
 
     pub unsafe fn clean(&self, device: &Device) {
