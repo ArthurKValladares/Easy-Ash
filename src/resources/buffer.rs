@@ -90,6 +90,10 @@ impl Buffer {
 
     pub fn from_data<T: Copy>(device: &Device, ty: BufferType, data: &[T]) -> Result<Self> {
         let size = mem::size_of_slice(data);
+        Self::from_data_with_size(device, ty, data, size)
+    }
+
+    pub fn from_data_with_size<T: Copy>(device: &Device, ty: BufferType, data: &[T], size: u64) -> Result<Self> {
         let buffer = Self::with_size(device, size, ty)?;
         buffer.copy_data(data)?;
         Ok(buffer)

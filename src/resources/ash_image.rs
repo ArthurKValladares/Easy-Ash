@@ -167,10 +167,10 @@ impl Image {
         fence: &Fence,
         width: u32,
         height: u32,
-        image_data: Bytes,
+        image_data: &Bytes,
     ) -> Result<(Self, Buffer)> {
         let image_extent = vk::Extent2D { width, height };
-        let image_buffer = Buffer::from_data(device, BufferType::Staging, &image_data)?;
+        let image_buffer = Buffer::from_data_with_size(device, BufferType::Staging, image_data, (width * height * 4) as u64)?;
         let image = Image::new(
             device,
             ImageResolution::from_width_height(width, height),
@@ -252,7 +252,7 @@ impl Image {
         let (width, height) = im.dimensions();
         let image_data = Bytes::from(im.into_bytes());
 
-        Image::from_data_and_dims(device, context, fence, width, height, image_data)
+        Image::from_data_and_dims(device, context, fence, width, height, &image_data)
     }
 
     pub unsafe fn clean(&self, device: &Device) {
