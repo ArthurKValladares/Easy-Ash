@@ -22,6 +22,7 @@ pub use {
     },
     device::Device,
     entry::{Entry, InstanceInfo},
+    mem::as_u8_slice,
     pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
     push_constant::PushConstant,
     render_pass::{ClearValue, RenderPass},
@@ -33,7 +34,6 @@ pub use {
     surface::Surface,
     swapchain::Swapchain,
     sync::{AccessMask, Fence, ImageMemoryBarrier, Semaphore},
-    mem::as_u8_slice
 };
 
 pub use math;

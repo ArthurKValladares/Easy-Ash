@@ -14,6 +14,7 @@ pub struct Swapchain {
     pub swapchain: vk::SwapchainKHR,
     pub present_images: Vec<vk::Image>,
     pub present_image_views: Vec<vk::ImageView>,
+    use_vsync: bool,
 }
 
 impl Swapchain {
@@ -24,6 +25,7 @@ impl Swapchain {
         old_swapchain: Option<vk::SwapchainKHR>,
         width: u32,
         height: u32,
+        use_vsync: bool,
     ) -> Result<(
         SurfaceData,
         ash::extensions::khr::Swapchain,
@@ -51,7 +53,13 @@ impl Swapchain {
         let present_mode = present_modes
             .iter()
             .cloned()
-            .find(|&mode| mode == vk::PresentModeKHR::MAILBOX)
+            .find(|&mode| {
+                if use_vsync {
+                    mode == vk::PresentModeKHR::FIFO
+                } else {
+                    mode == vk::PresentModeKHR::MAILBOX
+                }
+            })
             .unwrap_or(vk::PresentModeKHR::FIFO);
         let loader = ash::extensions::khr::Swapchain::new(&entry.instance, &device.device);
 
@@ -122,9 +130,12 @@ impl Swapchain {
         surface: Surface,
         width: u32,
         height: u32,
+        use_vsync: bool,
     ) -> Result<Self> {
         let (surface_data, loader, swapchain, present_images, present_image_views) =
-            Self::create_swapchain_structures(entry, device, &surface, None, width, height)?;
+            Self::create_swapchain_structures(
+                entry, device, &surface, None, width, height, use_vsync,
+            )?;
         Ok(Self {
             surface,
             surface_data,
@@ -132,6 +143,7 @@ impl Swapchain {
             swapchain,
             present_images,
             present_image_views,
+            use_vsync,
         })
     }
 
@@ -153,6 +165,7 @@ impl Swapchain {
                 Some(self.swapchain),
                 width,
                 height,
+                self.use_vsync,
             )?;
         self.surface_data = surface_data;
         self.loader = loader;
