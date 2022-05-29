@@ -1,5 +1,7 @@
 pub mod graphics_pipeline;
 
+pub use graphics_pipeline::GraphicsPipeline;
+
 #[derive(Debug, Copy, Clone)]
 pub enum PipelineStages {
     TopOfPipe,

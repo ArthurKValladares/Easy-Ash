@@ -91,7 +91,10 @@ impl GraphicsPipeline {
             .map(|set| set.layout)
             .collect::<Vec<_>>();
 
-        let push_constant_ranges = push_constants.iter().map(|pc| pc.to_raw()).collect::<Vec<_>>();
+        let push_constant_ranges = push_constants
+            .iter()
+            .map(|pc| pc.to_raw())
+            .collect::<Vec<_>>();
 
         let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
             .set_layouts(&descriptor_set_layouts)

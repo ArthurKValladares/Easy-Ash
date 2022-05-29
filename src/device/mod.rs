@@ -1,11 +1,12 @@
 use crate::{
     context::Context,
     entry::Entry,
-    pipeline::PipelineStages,
+    pipeline::{GraphicsPipeline, PipelineStages},
     resources::buffer::Buffer,
     surface::Surface,
     swapchain::Swapchain,
     sync::{Fence, ImageMemoryBarrier, Semaphore},
+    PushConstant,
 };
 use anyhow::Result;
 use ash::vk;
@@ -128,6 +129,24 @@ impl Device {
         unsafe {
             self.device
                 .cmd_draw_indexed(context.command_buffer, index_count, 1, 0, 0, 1);
+        }
+    }
+
+    pub fn push_constant(
+        &self,
+        context: &Context,
+        pipeline: &GraphicsPipeline,
+        push_constant: &PushConstant,
+        data: &[u8],
+    ) {
+        unsafe {
+            self.device.cmd_push_constants(
+                context.command_buffer,
+                pipeline.layout,
+                push_constant.stage.into(),
+                push_constant.offset,
+                data,
+            );
         }
     }
 

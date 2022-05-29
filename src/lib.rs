@@ -33,6 +33,7 @@ pub use {
     surface::Surface,
     swapchain::Swapchain,
     sync::{AccessMask, Fence, ImageMemoryBarrier, Semaphore},
+    mem::as_u8_slice
 };
 
 pub use math;
