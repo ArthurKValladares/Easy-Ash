@@ -5,6 +5,7 @@ mod device;
 mod entry;
 mod mem;
 mod pipeline;
+mod push_constant;
 mod render_pass;
 mod resources;
 mod shader;
@@ -22,6 +23,7 @@ pub use {
     device::Device,
     entry::{Entry, InstanceInfo},
     pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
+    push_constant::PushConstant,
     render_pass::{ClearValue, RenderPass},
     resources::{
         Buffer, BufferType, Image, ImageLayout, ImageResolution, ImageType, Sampler, SamplerFilter,

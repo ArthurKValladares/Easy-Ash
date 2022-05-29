@@ -1,6 +1,6 @@
 use crate::{
-    context::Context, descriptors::DescriptorSet, device::Device, render_pass::RenderPass,
-    shader::graphics_program::GraphicsProgram, swapchain::Swapchain,
+    context::Context, descriptors::DescriptorSet, device::Device, push_constant::PushConstant,
+    render_pass::RenderPass, shader::graphics_program::GraphicsProgram, swapchain::Swapchain,
 };
 use anyhow::Result;
 use ash::vk;
@@ -25,6 +25,7 @@ impl GraphicsPipeline {
         render_pass: &RenderPass,
         program: &GraphicsProgram,
         descriptor_sets: &[&DescriptorSet],
+        push_constants: &[&PushConstant],
     ) -> Result<Self> {
         let shader_entry_name = unsafe { CStr::from_bytes_with_nul_unchecked(b"main\0") };
         let shader_stage_create_infos = [
@@ -90,8 +91,11 @@ impl GraphicsPipeline {
             .map(|set| set.layout)
             .collect::<Vec<_>>();
 
-        let layout_create_info =
-            vk::PipelineLayoutCreateInfo::builder().set_layouts(&descriptor_set_layouts);
+        let push_constant_ranges = push_constants.iter().map(|pc| pc.to_raw()).collect::<Vec<_>>();
+
+        let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
+            .set_layouts(&descriptor_set_layouts)
+            .push_constant_ranges(&push_constant_ranges);
 
         let layout = unsafe {
             device

@@ -93,7 +93,12 @@ impl Buffer {
         Self::from_data_with_size(device, ty, data, size)
     }
 
-    pub fn from_data_with_size<T: Copy>(device: &Device, ty: BufferType, data: &[T], size: u64) -> Result<Self> {
+    pub fn from_data_with_size<T: Copy>(
+        device: &Device,
+        ty: BufferType,
+        data: &[T],
+        size: u64,
+    ) -> Result<Self> {
         let buffer = Self::with_size(device, size, ty)?;
         buffer.copy_data(data)?;
         Ok(buffer)

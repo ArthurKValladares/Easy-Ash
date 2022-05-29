@@ -170,7 +170,12 @@ impl Image {
         image_data: &Bytes,
     ) -> Result<(Self, Buffer)> {
         let image_extent = vk::Extent2D { width, height };
-        let image_buffer = Buffer::from_data_with_size(device, BufferType::Staging, image_data, (width * height * 4) as u64)?;
+        let image_buffer = Buffer::from_data_with_size(
+            device,
+            BufferType::Staging,
+            image_data,
+            (width * height * 4) as u64,
+        )?;
         let image = Image::new(
             device,
             ImageResolution::from_width_height(width, height),
