@@ -1,4 +1,4 @@
-use crate::{context::Context, device::Device, swapchain::Swapchain};
+use crate::{context::Context, device::Device, swapchain::Swapchain, Image};
 use anyhow::Result;
 use ash::vk;
 use math::vec::Vec4;
@@ -35,24 +35,38 @@ impl RenderPass {
     fn create_render_pass_structures(
         device: &Device,
         swapchain: &Swapchain,
-        clear_values: &[vk::ClearValue],
     ) -> Result<(vk::RenderPass, Vec<vk::Framebuffer>, vk::Rect2D)> {
         // TODO: hard-coded to only take a color attachment with a single subpass for now. More work on better abstraction later
-        let renderpass_attachments = [vk::AttachmentDescription {
-            format: swapchain.surface_data.format.format,
-            samples: vk::SampleCountFlags::TYPE_1,
-            load_op: vk::AttachmentLoadOp::CLEAR,
-            store_op: vk::AttachmentStoreOp::STORE,
-            final_layout: vk::ImageLayout::PRESENT_SRC_KHR,
-            ..Default::default()
-        }];
+        let renderpass_attachments = [
+            vk::AttachmentDescription {
+                format: swapchain.surface_data.format.format,
+                samples: vk::SampleCountFlags::TYPE_1,
+                load_op: vk::AttachmentLoadOp::CLEAR,
+                store_op: vk::AttachmentStoreOp::STORE,
+                final_layout: vk::ImageLayout::PRESENT_SRC_KHR,
+                ..Default::default()
+            },
+            vk::AttachmentDescription {
+                format: vk::Format::D16_UNORM,
+                samples: vk::SampleCountFlags::TYPE_1,
+                load_op: vk::AttachmentLoadOp::CLEAR,
+                initial_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                final_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                ..Default::default()
+            },
+        ];
         let color_attachment_refs = [vk::AttachmentReference {
             attachment: 0,
             layout: vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
         }];
+        let depth_attachment_ref = vk::AttachmentReference {
+            attachment: 1,
+            layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        };
 
         let subpass = vk::SubpassDescription::builder()
             .color_attachments(&color_attachment_refs)
+            .depth_stencil_attachment(&depth_attachment_ref)
             .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS);
 
         let renderpass_create_info = vk::RenderPassCreateInfo::builder()
@@ -69,7 +83,7 @@ impl RenderPass {
             .present_image_views
             .iter()
             .map(|&present_image_view| {
-                let framebuffer_attachments = [present_image_view];
+                let framebuffer_attachments = [present_image_view, swapchain.depth_image.view];
                 let frame_buffer_create_info = vk::FramebufferCreateInfo::builder()
                     .render_pass(render_pass)
                     .attachments(&framebuffer_attachments)
@@ -104,7 +118,7 @@ impl RenderPass {
             })
             .collect::<Vec<_>>();
         let (render_pass, framebuffers, render_area) =
-            Self::create_render_pass_structures(device, swapchain, &clear_values)?;
+            Self::create_render_pass_structures(device, swapchain)?;
 
         Ok(Self {
             render_pass,
@@ -119,7 +133,7 @@ impl RenderPass {
             self.clean(device);
         }
         let (render_pass, framebuffers, render_area) =
-            Self::create_render_pass_structures(device, swapchain, &self.clear_values)?;
+            Self::create_render_pass_structures(device, swapchain)?;
         self.render_pass = render_pass;
         self.framebuffers = framebuffers;
         self.render_area = render_area;

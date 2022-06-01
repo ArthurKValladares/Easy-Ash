@@ -68,6 +68,23 @@ impl GraphicsPipeline {
             ..Default::default()
         };
 
+        let noop_stencil_state = vk::StencilOpState {
+            fail_op: vk::StencilOp::KEEP,
+            pass_op: vk::StencilOp::KEEP,
+            depth_fail_op: vk::StencilOp::KEEP,
+            compare_op: vk::CompareOp::ALWAYS,
+            ..Default::default()
+        };
+        let depth_state_info = vk::PipelineDepthStencilStateCreateInfo {
+            depth_test_enable: 1,
+            depth_write_enable: 1,
+            depth_compare_op: vk::CompareOp::LESS_OR_EQUAL,
+            front: noop_stencil_state,
+            back: noop_stencil_state,
+            max_depth_bounds: 1.0,
+            ..Default::default()
+        };
+
         let color_blend_attachment_states = [vk::PipelineColorBlendAttachmentState {
             blend_enable: 0,
             src_color_blend_factor: vk::BlendFactor::SRC_COLOR,
@@ -113,6 +130,7 @@ impl GraphicsPipeline {
             .viewport_state(&viewport_state_info)
             .rasterization_state(&rasterization_info)
             .multisample_state(&multisample_state_info)
+            .depth_stencil_state(&depth_state_info)
             .color_blend_state(&color_blend_state)
             .dynamic_state(&dynamic_state_info)
             .layout(layout)

@@ -3,6 +3,7 @@ use crate::{
     entry::Entry,
     surface::{Surface, SurfaceData},
     sync::Semaphore,
+    Context, Fence, Image, ImageType,
 };
 use anyhow::Result;
 use ash::vk;
@@ -14,6 +15,7 @@ pub struct Swapchain {
     pub swapchain: vk::SwapchainKHR,
     pub present_images: Vec<vk::Image>,
     pub present_image_views: Vec<vk::ImageView>,
+    pub depth_image: Image,
     use_vsync: bool,
 }
 
@@ -32,6 +34,7 @@ impl Swapchain {
         vk::SwapchainKHR,
         Vec<vk::Image>,
         Vec<vk::ImageView>,
+        Image,
     )> {
         let surface_data = SurfaceData::new(&surface, device, width, height)?;
 
@@ -115,12 +118,15 @@ impl Swapchain {
             }
         }
 
+        let depth_image = Image::new(&device, surface_data.resolution.into(), ImageType::Depth)?;
+
         Ok((
             surface_data,
             loader,
             swapchain,
             present_images,
             present_image_views,
+            depth_image,
         ))
     }
 
@@ -132,7 +138,7 @@ impl Swapchain {
         height: u32,
         use_vsync: bool,
     ) -> Result<Self> {
-        let (surface_data, loader, swapchain, present_images, present_image_views) =
+        let (surface_data, loader, swapchain, present_images, present_image_views, depth_image) =
             Self::create_swapchain_structures(
                 entry, device, &surface, None, width, height, use_vsync,
             )?;
@@ -143,21 +149,63 @@ impl Swapchain {
             swapchain,
             present_images,
             present_image_views,
+            depth_image,
             use_vsync,
         })
+    }
+
+    pub fn transition_depth_image(
+        &self,
+        device: &Device,
+        context: &Context,
+        fence: &Fence,
+    ) -> Result<()> {
+        context.record(&device, &[], &[], &fence, &[], |device, context| {
+            let layout_transition_barriers = vk::ImageMemoryBarrier::builder()
+                .image(self.depth_image.image)
+                .dst_access_mask(
+                    vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ
+                        | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE,
+                )
+                .new_layout(vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                .old_layout(vk::ImageLayout::UNDEFINED)
+                .subresource_range(
+                    vk::ImageSubresourceRange::builder()
+                        .aspect_mask(vk::ImageAspectFlags::DEPTH)
+                        .layer_count(1)
+                        .level_count(1)
+                        .build(),
+                )
+                .build();
+
+            unsafe {
+                device.device.cmd_pipeline_barrier(
+                    context.command_buffer,
+                    vk::PipelineStageFlags::BOTTOM_OF_PIPE,
+                    vk::PipelineStageFlags::LATE_FRAGMENT_TESTS,
+                    vk::DependencyFlags::empty(),
+                    &[],
+                    &[],
+                    &[layout_transition_barriers],
+                )
+            };
+        })?;
+        Ok(())
     }
 
     pub fn resize(
         &mut self,
         entry: &Entry,
         device: &Device,
+        context: &Context,
+        fence: &Fence,
         width: u32,
         height: u32,
     ) -> Result<()> {
         unsafe {
             self.clean_image_views(device);
         }
-        let (surface_data, loader, swapchain, present_images, present_image_views) =
+        let (surface_data, loader, swapchain, present_images, present_image_views, depth_image) =
             Self::create_swapchain_structures(
                 entry,
                 device,
@@ -172,6 +220,8 @@ impl Swapchain {
         self.swapchain = swapchain;
         self.present_images = present_images;
         self.present_image_views = present_image_views;
+        self.depth_image = depth_image;
+        self.transition_depth_image(&device, &context, &fence)?;
         Ok(())
     }
 
@@ -249,5 +299,6 @@ impl Swapchain {
         self.clean_image_views(device);
         self.loader.destroy_swapchain(self.swapchain, None);
         self.surface.clean();
+        self.depth_image.clean(device);
     }
 }
