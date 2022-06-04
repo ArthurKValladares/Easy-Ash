@@ -36,7 +36,7 @@ impl RenderPass {
         device: &Device,
         swapchain: &Swapchain,
     ) -> Result<(vk::RenderPass, Vec<vk::Framebuffer>, vk::Rect2D)> {
-        // TODO: hard-coded to only take a color attachment with a single subpass for now. More work on better abstraction later
+        // TODO: hard-coded for now
         let renderpass_attachments = [
             vk::AttachmentDescription {
                 format: swapchain.surface_data.format.format,

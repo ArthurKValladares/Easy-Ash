@@ -203,7 +203,7 @@ impl Swapchain {
         height: u32,
     ) -> Result<()> {
         unsafe {
-            self.clean_image_views(device);
+            self.clean_images(device);
         }
         let (surface_data, loader, swapchain, present_images, present_image_views, depth_image) =
             Self::create_swapchain_structures(
@@ -289,16 +289,16 @@ impl Swapchain {
         Ok(())
     }
 
-    unsafe fn clean_image_views(&self, device: &Device) {
+    unsafe fn clean_images(&self, device: &Device) {
         for image_view in &self.present_image_views {
             device.device.destroy_image_view(*image_view, None);
         }
+        self.depth_image.clean(device);
     }
 
     pub unsafe fn clean(&self, device: &Device) {
-        self.clean_image_views(device);
+        self.clean_images(device);
         self.loader.destroy_swapchain(self.swapchain, None);
         self.surface.clean();
-        self.depth_image.clean(device);
     }
 }
