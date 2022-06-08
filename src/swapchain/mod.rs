@@ -241,9 +241,9 @@ impl Swapchain {
     pub fn viewport(&self) -> vk::Viewport {
         vk::Viewport {
             x: 0.0,
-            y: 0.0,
+            y: self.surface_data.resolution.height as f32,
             width: self.surface_data.resolution.width as f32,
-            height: self.surface_data.resolution.height as f32,
+            height: -(self.surface_data.resolution.height as f32),
             min_depth: 0.0,
             max_depth: 1.0,
         }
