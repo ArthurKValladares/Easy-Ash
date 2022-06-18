@@ -239,6 +239,7 @@ impl Swapchain {
 
     // TODO: Wrapper type
     pub fn viewport(&self) -> vk::Viewport {
+        // TODO: Let user choose flipped viewport
         vk::Viewport {
             x: 0.0,
             y: self.surface_data.resolution.height as f32,
