@@ -124,11 +124,10 @@ impl Device {
         }
     }
 
-    pub fn draw_indexed(&self, context: &Context, index_count: u32) {
-        // TODO: Hook up rest of the params
+    pub fn draw_indexed(&self, context: &Context, first_index: u32, index_count: u32) {
         unsafe {
             self.device
-                .cmd_draw_indexed(context.command_buffer, index_count, 1, 0, 0, 1);
+                .cmd_draw_indexed(context.command_buffer, index_count, 1, first_index, 0, 1);
         }
     }
 
