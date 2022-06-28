@@ -20,6 +20,7 @@ pub enum DeviceCreationError {
 
 pub struct Device {
     pub p_device: vk::PhysicalDevice,
+    pub properties: vk::PhysicalDeviceProperties,
     pub memory_properties: vk::PhysicalDeviceMemoryProperties,
     pub device: ash::Device,
     pub queue_family_index: u32,
@@ -57,6 +58,7 @@ impl Device {
                     })
             })
             .ok_or(DeviceCreationError::NoSuitableDevice)?;
+        let properties = unsafe { entry.instance.get_physical_device_properties(p_device) };
         let memory_properties = unsafe {
             entry
                 .instance
@@ -94,6 +96,7 @@ impl Device {
 
         Ok(Self {
             p_device,
+            properties,
             memory_properties,
             device,
             queue_family_index,
