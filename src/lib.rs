@@ -25,7 +25,7 @@ pub use {
     mem::as_u8_slice,
     pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
     push_constant::PushConstant,
-    render_pass::{ClearValue, RenderPass},
+    render_pass::{ClearValue, RenderPass, RenderPassAttachment},
     resources::{
         Buffer, BufferType, Image, ImageLayout, ImageResolution, ImageType, Sampler, SamplerFilter,
         SamplerWrapMode,

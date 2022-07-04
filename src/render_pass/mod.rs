@@ -24,9 +24,61 @@ impl From<ClearValue> for vk::ClearValue {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum RenderPassAttachment {
+    ColorClear,
+    ColorLoad,
+    DepthClear,
+    DepthLoad,
+}
+
+impl RenderPassAttachment {
+    fn to_vk(self, format: vk::Format) -> vk::AttachmentDescription {
+        match self {
+            RenderPassAttachment::ColorClear => vk::AttachmentDescription {
+                format,
+                samples: vk::SampleCountFlags::TYPE_1,
+                load_op: vk::AttachmentLoadOp::CLEAR,
+                store_op: vk::AttachmentStoreOp::STORE,
+                final_layout: vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
+                ..Default::default()
+            },
+            RenderPassAttachment::ColorLoad => vk::AttachmentDescription {
+                format,
+                samples: vk::SampleCountFlags::TYPE_1,
+                load_op: vk::AttachmentLoadOp::LOAD,
+                store_op: vk::AttachmentStoreOp::STORE,
+                initial_layout: vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
+                final_layout: vk::ImageLayout::PRESENT_SRC_KHR,
+                ..Default::default()
+            },
+            RenderPassAttachment::DepthClear => vk::AttachmentDescription {
+                format: vk::Format::D16_UNORM,
+                samples: vk::SampleCountFlags::TYPE_1,
+                load_op: vk::AttachmentLoadOp::CLEAR,
+                store_op: vk::AttachmentStoreOp::STORE,
+                initial_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                final_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                ..Default::default()
+            },
+            RenderPassAttachment::DepthLoad => vk::AttachmentDescription {
+                format: vk::Format::D16_UNORM,
+                samples: vk::SampleCountFlags::TYPE_1,
+                load_op: vk::AttachmentLoadOp::LOAD,
+                store_op: vk::AttachmentStoreOp::STORE,
+                initial_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                final_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                ..Default::default()
+            },
+        }
+    }
+}
+
 pub struct RenderPass {
     pub render_pass: vk::RenderPass,
     pub framebuffers: Vec<vk::Framebuffer>,
+    color_attachment: RenderPassAttachment,
+    depth_attachment: RenderPassAttachment,
     clear_values: Vec<vk::ClearValue>,
     render_area: vk::Rect2D,
 }
@@ -35,25 +87,13 @@ impl RenderPass {
     fn create_render_pass_structures(
         device: &Device,
         swapchain: &Swapchain,
+        color_attachment: RenderPassAttachment,
+        depth_attachment: RenderPassAttachment,
     ) -> Result<(vk::RenderPass, Vec<vk::Framebuffer>, vk::Rect2D)> {
         // TODO: hard-coded for now
         let renderpass_attachments = [
-            vk::AttachmentDescription {
-                format: swapchain.surface_data.format.format,
-                samples: vk::SampleCountFlags::TYPE_1,
-                load_op: vk::AttachmentLoadOp::CLEAR,
-                store_op: vk::AttachmentStoreOp::STORE,
-                final_layout: vk::ImageLayout::PRESENT_SRC_KHR,
-                ..Default::default()
-            },
-            vk::AttachmentDescription {
-                format: vk::Format::D16_UNORM,
-                samples: vk::SampleCountFlags::TYPE_1,
-                load_op: vk::AttachmentLoadOp::CLEAR,
-                initial_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                final_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                ..Default::default()
-            },
+            color_attachment.to_vk(swapchain.surface_data.format.format),
+            depth_attachment.to_vk(swapchain.surface_data.format.format),
         ];
         let color_attachment_refs = [vk::AttachmentReference {
             attachment: 0,
@@ -108,6 +148,8 @@ impl RenderPass {
     pub fn new(
         device: &Device,
         swapchain: &Swapchain,
+        color_attachment: RenderPassAttachment,
+        depth_attachment: RenderPassAttachment,
         clear_values: &[ClearValue],
     ) -> Result<Self> {
         let clear_values = clear_values
@@ -117,12 +159,18 @@ impl RenderPass {
                 ret
             })
             .collect::<Vec<_>>();
-        let (render_pass, framebuffers, render_area) =
-            Self::create_render_pass_structures(device, swapchain)?;
+        let (render_pass, framebuffers, render_area) = Self::create_render_pass_structures(
+            device,
+            swapchain,
+            color_attachment,
+            depth_attachment,
+        )?;
 
         Ok(Self {
             render_pass,
             framebuffers,
+            color_attachment,
+            depth_attachment,
             clear_values,
             render_area,
         })
@@ -132,8 +180,12 @@ impl RenderPass {
         unsafe {
             self.clean(device);
         }
-        let (render_pass, framebuffers, render_area) =
-            Self::create_render_pass_structures(device, swapchain)?;
+        let (render_pass, framebuffers, render_area) = Self::create_render_pass_structures(
+            device,
+            swapchain,
+            self.color_attachment,
+            self.depth_attachment,
+        )?;
         self.render_pass = render_pass;
         self.framebuffers = framebuffers;
         self.render_area = render_area;
