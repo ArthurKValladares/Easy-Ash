@@ -67,19 +67,20 @@ pub fn new_descriptor_image_info(image: &Image, sampler: &Sampler) -> vk::Descri
     }
 }
 
+// TODO: Theres' some duplicated state in here and `DescriptorInfo`, get rid of it later
 #[derive(Debug, Clone)]
 pub enum DescriptorType {
-    StorageBuffer(DescriptorBufferInfo),
-    UniformBuffer(DescriptorBufferInfo),
-    CombinedImageSampler(Vec<vk::DescriptorImageInfo>),
+    StorageBuffer,
+    UniformBuffer,
+    CombinedImageSampler,
 }
 
 impl From<DescriptorType> for vk::DescriptorType {
     fn from(ty: DescriptorType) -> Self {
         match ty {
-            DescriptorType::StorageBuffer(_) => vk::DescriptorType::STORAGE_BUFFER,
-            DescriptorType::UniformBuffer(_) => vk::DescriptorType::UNIFORM_BUFFER,
-            DescriptorType::CombinedImageSampler(_) => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
+            DescriptorType::StorageBuffer => vk::DescriptorType::STORAGE_BUFFER,
+            DescriptorType::UniformBuffer => vk::DescriptorType::UNIFORM_BUFFER,
+            DescriptorType::CombinedImageSampler => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
         }
     }
 }
@@ -87,9 +88,35 @@ impl From<DescriptorType> for vk::DescriptorType {
 impl From<&DescriptorType> for vk::DescriptorType {
     fn from(ty: &DescriptorType) -> Self {
         match ty {
-            DescriptorType::StorageBuffer(_) => vk::DescriptorType::STORAGE_BUFFER,
-            DescriptorType::UniformBuffer(_) => vk::DescriptorType::UNIFORM_BUFFER,
-            DescriptorType::CombinedImageSampler(_) => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
+            DescriptorType::StorageBuffer => vk::DescriptorType::STORAGE_BUFFER,
+            DescriptorType::UniformBuffer => vk::DescriptorType::UNIFORM_BUFFER,
+            DescriptorType::CombinedImageSampler => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
+        }
+    }
+}
+
+pub enum DescriptorInfo {
+    StorageBuffer(DescriptorBufferInfo),
+    UniformBuffer(DescriptorBufferInfo),
+    CombinedImageSampler(Vec<vk::DescriptorImageInfo>),
+}
+
+impl From<DescriptorInfo> for vk::DescriptorType {
+    fn from(info: DescriptorInfo) -> Self {
+        match info {
+            DescriptorInfo::StorageBuffer(_) => vk::DescriptorType::STORAGE_BUFFER,
+            DescriptorInfo::UniformBuffer(_) => vk::DescriptorType::UNIFORM_BUFFER,
+            DescriptorInfo::CombinedImageSampler(_) => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
+        }
+    }
+}
+
+impl From<&DescriptorInfo> for vk::DescriptorType {
+    fn from(info: &DescriptorInfo) -> Self {
+        match info {
+            DescriptorInfo::StorageBuffer(_) => vk::DescriptorType::STORAGE_BUFFER,
+            DescriptorInfo::UniformBuffer(_) => vk::DescriptorType::UNIFORM_BUFFER,
+            DescriptorInfo::CombinedImageSampler(_) => vk::DescriptorType::COMBINED_IMAGE_SAMPLER,
         }
     }
 }
@@ -168,32 +195,34 @@ impl DescriptorSet {
                 .allocate_descriptor_sets(&descriptor_alloc_info)?[0]
         };
 
-        let write_descriptor_sets = binding_descs
+        Ok(Self {
+            layout,
+            descriptor_set,
+            write_descriptor_sets: Default::default(),
+        })
+    }
+
+    pub fn bind(&mut self, infos: &[DescriptorInfo]) {
+        self.write_descriptor_sets = infos
             .iter()
             .enumerate()
-            .map(|(idx, desc)| {
+            .map(|(idx, info)| {
                 let write = vk::WriteDescriptorSet::builder()
-                    .dst_set(descriptor_set)
+                    .dst_set(self.descriptor_set)
                     .dst_binding(idx as u32)
-                    .descriptor_type(desc.ty().into());
-                match &desc.ty {
-                    DescriptorType::StorageBuffer(info) => {
+                    .descriptor_type(info.into());
+                match info {
+                    DescriptorInfo::StorageBuffer(info) => {
                         write.buffer_info(std::slice::from_ref(&info.info))
                     }
-                    DescriptorType::UniformBuffer(info) => {
+                    DescriptorInfo::UniformBuffer(info) => {
                         write.buffer_info(std::slice::from_ref(&info.info))
                     }
-                    DescriptorType::CombinedImageSampler(infos) => write.image_info(infos),
+                    DescriptorInfo::CombinedImageSampler(infos) => write.image_info(infos),
                 }
                 .build()
             })
             .collect::<Vec<_>>();
-
-        Ok(Self {
-            layout,
-            descriptor_set,
-            write_descriptor_sets,
-        })
     }
 
     pub fn update(&self, device: &Device) {

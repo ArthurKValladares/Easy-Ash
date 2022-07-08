@@ -17,8 +17,8 @@ pub use {
     application::{ApiVersion, ApplicationInfo},
     context::Context,
     descriptors::{
-        new_descriptor_image_info, BindingDesc, DescriptorBufferInfo, DescriptorPool,
-        DescriptorSet, DescriptorType, ShaderStage,
+        new_descriptor_image_info, BindingDesc, DescriptorBufferInfo, DescriptorInfo,
+        DescriptorPool, DescriptorSet, DescriptorType, ShaderStage,
     },
     device::Device,
     entry::{Entry, InstanceInfo},
