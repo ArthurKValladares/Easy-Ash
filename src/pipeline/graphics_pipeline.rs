@@ -26,6 +26,7 @@ impl GraphicsPipeline {
         program: &GraphicsProgram,
         descriptor_sets: &[&DescriptorSet],
         push_constants: &[&PushConstant],
+        cull_back_faces: bool,
     ) -> Result<Self> {
         let shader_entry_name = unsafe { CStr::from_bytes_with_nul_unchecked(b"main\0") };
         let shader_stage_create_infos = [
@@ -60,7 +61,11 @@ impl GraphicsPipeline {
             front_face: vk::FrontFace::COUNTER_CLOCKWISE,
             line_width: 1.0,
             polygon_mode: vk::PolygonMode::FILL,
-            cull_mode: vk::CullModeFlags::BACK,
+            cull_mode: if cull_back_faces {
+                vk::CullModeFlags::BACK
+            } else {
+                vk::CullModeFlags::NONE
+            },
             ..Default::default()
         };
         let multisample_state_info = vk::PipelineMultisampleStateCreateInfo {
