@@ -63,6 +63,8 @@ unsafe extern "system" fn vulkan_debug_callback(
         &message_id_number.to_string(),
         message,
     );
-
+    if message_severity.contains(vk::DebugUtilsMessageSeverityFlagsEXT::ERROR) {
+        debug_assert!(false);
+    }
     vk::FALSE
 }

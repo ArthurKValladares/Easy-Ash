@@ -167,7 +167,7 @@ impl Image {
         fence: &Fence,
         width: u32,
         height: u32,
-        image_data: &Bytes,
+        image_data: &[u8],
     ) -> Result<(Self, Buffer)> {
         let image_extent = vk::Extent2D { width, height };
         let image_buffer = Buffer::from_data_with_size(
