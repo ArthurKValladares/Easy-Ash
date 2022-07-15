@@ -36,11 +36,6 @@ impl MemoryMappablePointer {
     }
 }
 
-// TODO: Move
-pub fn size_of_slice<T>(data: &[T]) -> u64 {
-    std::mem::size_of_val(data) as u64
-}
-
 pub fn as_u8_slice<T: Sized>(p: &T) -> &[u8] {
     unsafe { std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>()) }
 }
