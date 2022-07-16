@@ -89,7 +89,7 @@ impl Buffer {
     }
 
     pub fn from_data<T: Copy>(device: &Device, ty: BufferType, data: &[T]) -> Result<Self> {
-        let size = std::mem::size_of_val(data);
+        let size = std::mem::size_of_val(data) as u64;
         Self::from_data_with_size(device, ty, data, size)
     }
 
