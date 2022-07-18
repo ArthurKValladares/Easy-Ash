@@ -23,7 +23,10 @@ pub use {
     device::Device,
     entry::{Entry, InstanceInfo},
     mem::as_u8_slice,
-    pipeline::{graphics_pipeline::GraphicsPipeline, PipelineStages},
+    pipeline::{
+        graphics_pipeline::{GraphicsPipeline, VertexInputData},
+        PipelineStages,
+    },
     push_constant::PushConstant,
     render_pass::{ClearValue, RenderPass, RenderPassAttachment},
     resources::{
@@ -36,4 +39,5 @@ pub use {
     sync::{AccessMask, Fence, ImageMemoryBarrier, Semaphore},
 };
 
+pub use ash;
 pub use math;

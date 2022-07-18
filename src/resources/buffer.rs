@@ -20,6 +20,7 @@ pub enum MemoryCopyError {
 
 pub enum BufferType {
     Index,
+    Vertex,
     Storage,
     Uniform,
     Staging,
@@ -29,6 +30,7 @@ impl BufferType {
     fn usage(&self) -> vk::BufferUsageFlags {
         match self {
             BufferType::Index => vk::BufferUsageFlags::INDEX_BUFFER,
+            BufferType::Vertex => vk::BufferUsageFlags::VERTEX_BUFFER,
             BufferType::Storage => vk::BufferUsageFlags::STORAGE_BUFFER,
             BufferType::Staging => vk::BufferUsageFlags::TRANSFER_SRC,
             BufferType::Uniform => vk::BufferUsageFlags::UNIFORM_BUFFER,

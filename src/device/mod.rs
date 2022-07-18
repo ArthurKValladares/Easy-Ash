@@ -116,6 +116,19 @@ impl Device {
         }
     }
 
+    pub fn bind_vertex_buffers(&self, context: &Context, buffers: &[&Buffer]) {
+        // TODO: I should not need to collect here, reduces perf
+        let buffers = buffers
+            .iter()
+            .map(|buffer| buffer.buffer)
+            .collect::<Vec<_>>();
+        let offsets = buffers.iter().map(|buffer| 0).collect::<Vec<_>>();
+        unsafe {
+            self.device
+                .cmd_bind_vertex_buffers(context.command_buffer, 0, &buffers, &offsets);
+        }
+    }
+
     pub fn bind_index_buffer(&self, context: &Context, buffer: &Buffer) {
         unsafe {
             self.device.cmd_bind_index_buffer(

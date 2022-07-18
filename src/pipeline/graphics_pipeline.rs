@@ -7,6 +7,21 @@ use ash::vk;
 use std::ffi::CStr;
 use thiserror::Error;
 
+#[derive(Debug)]
+pub struct VertexInputData {
+    pub bindings: Vec<vk::VertexInputBindingDescription>,
+    pub attributes: Vec<vk::VertexInputAttributeDescription>,
+}
+
+impl VertexInputData {
+    pub fn create_info(&self) -> vk::PipelineVertexInputStateCreateInfo {
+        vk::PipelineVertexInputStateCreateInfo::builder()
+            .vertex_attribute_descriptions(&self.attributes)
+            .vertex_binding_descriptions(&self.bindings)
+            .build()
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum PipelineCrationError {
     #[error("Could not create pipeline: {0}")]
@@ -24,6 +39,7 @@ impl GraphicsPipeline {
         swapchain: &Swapchain,
         render_pass: &RenderPass,
         program: &GraphicsProgram,
+        vertex_iput_state: Option<VertexInputData>,
         descriptor_sets: &[&DescriptorSet],
         push_constants: &[&PushConstant],
         cull_back_faces: bool,
@@ -128,7 +144,7 @@ impl GraphicsPipeline {
                 .create_pipeline_layout(&layout_create_info, None)?
         };
 
-        let graphic_pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
+        let graphic_pipeline_info_builder = vk::GraphicsPipelineCreateInfo::builder()
             .stages(&shader_stage_create_infos)
             .vertex_input_state(&vertex_input_state_ci)
             .input_assembly_state(&input_assembly_state)
@@ -139,8 +155,16 @@ impl GraphicsPipeline {
             .color_blend_state(&color_blend_state)
             .dynamic_state(&dynamic_state_info)
             .layout(layout)
-            .render_pass(render_pass.render_pass)
-            .build();
+            .render_pass(render_pass.render_pass);
+
+        let graphic_pipeline_info = if let Some(vertex_input_state) = &vertex_iput_state {
+            let create_info = vertex_input_state.create_info();
+            graphic_pipeline_info_builder
+                .vertex_input_state(&create_info)
+                .build()
+        } else {
+            graphic_pipeline_info_builder.build()
+        };
 
         let graphics_pipelines = unsafe {
             device
