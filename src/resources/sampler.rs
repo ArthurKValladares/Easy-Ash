@@ -42,19 +42,16 @@ pub struct Sampler {
 
 impl Sampler {
     pub fn new(device: &Device, filer: SamplerFilter, wrap_mode: SamplerWrapMode) -> Result<Self> {
-        // TODO: Make this configurable
-        let sampler_info = vk::SamplerCreateInfo {
-            mag_filter: filer.into(),
-            min_filter: filer.into(),
-            mipmap_mode: vk::SamplerMipmapMode::LINEAR,
-            address_mode_u: wrap_mode.into(),
-            address_mode_v: wrap_mode.into(),
-            address_mode_w: wrap_mode.into(),
-            max_anisotropy: 1.0,
-            border_color: vk::BorderColor::FLOAT_OPAQUE_WHITE,
-            compare_op: vk::CompareOp::NEVER,
-            ..Default::default()
-        };
+        let sampler_info = vk::SamplerCreateInfo::builder()
+            .address_mode_u(wrap_mode.into())
+            .address_mode_v(wrap_mode.into())
+            .address_mode_w(wrap_mode.into())
+            .anisotropy_enable(false)
+            .min_filter(filer.into())
+            .mag_filter(filer.into())
+            .mipmap_mode(vk::SamplerMipmapMode::LINEAR)
+            .min_lod(0.0)
+            .max_lod(vk::LOD_CLAMP_NONE);
 
         let sampler = unsafe { device.device.create_sampler(&sampler_info, None)? };
 
